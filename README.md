@@ -1,10 +1,13 @@
 # DBMS-Group_C
-**BIKE RENTAL DATABASE MANAGEMENT SYSTEM**
+
+***BIKE RENTAL DATABASE MANAGEMENT SYSTEM**
 
 A comprehensive Database Management System designed to streamline the operations of a modern bike rental business. This system facilitates bike rentals, returns, customer management, payment processing, and detailed reporting.
 
 
-**🎯 Purpose & Scope**
+
+
+***🎯 Purpose & Scope**
 
 The primary purpose of this DBMS is to effectively manage all core operations of a bike rental service, including:
 
@@ -19,7 +22,9 @@ Payment Processing: Recording transactions via multiple payment methods.
 Reporting: Generating insights into revenue, bike usage, and business performance.
 
 
-**👥 Main User Groups**
+
+
+***👥 Main User Groups**
 
 The system is designed for three distinct user groups:
 
@@ -30,7 +35,9 @@ Staff: Can process rentals and returns, manage bike inventory, check bike condit
 Administrators: Have full system access to generate reports, manage all data, manage staff accounts, and configure rental locations.
 
 
-**🗄️ Core Entities & Database Schema**
+
+
+***🗄️ Core Entities & Database Schema**
 
 The system is built around the following key entities and their relationships:
 
@@ -53,7 +60,9 @@ A detailed Entity-Relationship Diagram (ERD) is available in the project documen
 
 
 
-**⚙️ Key System Functions**
+
+
+***⚙️ Key System Functions**
 
 -Bike & Inventory Management: Add, update, remove, and track the status and location of bikes.
 
@@ -69,7 +78,7 @@ A detailed Entity-Relationship Diagram (ERD) is available in the project documen
 
 
 
-**🛠️ Technology Stack**
+***🛠️ Technology Stack**
 
 Database System: MySQL
 
@@ -81,7 +90,8 @@ Frontend: (Proposed) HTML, CSS, JavaScript, React
 
 
 
-**📁 Repository Structure**
+***📁 Repository Structure**
+
 
 DBMS-Bike-Rental_Group_C/
 
@@ -100,7 +110,9 @@ DBMS-Bike-Rental_Group_C/
 └── README.md
 
 
-**👨‍💻 Development Team (Group C)**
+
+***👨‍💻 Development Team (Group C)**
+
 
 Keith Paul Kato - (GitHub: keithpaulkato)
 
