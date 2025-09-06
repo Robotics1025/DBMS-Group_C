@@ -102,3 +102,16 @@ DBMS-Bike-Rental_Group_C/
 │   └── Sample_Data/                # SQL files for sample data (dummy data)
 ├── Source_Code/                    # Application source code 
 └── README.md                       # This file
+
+
+**👨‍💻 Development Team (Group C)**
+
+Keith Paul Kato - (GitHub: keithpaulkato)
+
+Ageno Elizabeth - (GitHub: AgenoElizabeth)
+
+Mugole Joel - (GitHub: Robotics1025)
+
+Kigozi Allan - (GitHub:)
+
+Nalubega Shadia - (GitHub:)
