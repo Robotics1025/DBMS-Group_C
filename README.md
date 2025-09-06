@@ -80,3 +80,13 @@ A detailed Entity-Relationship Diagram (ERD) is available in the project documen
 -Comprehensive Reporting: Generate reports on revenue, popular bikes, and high-traffic locations.
 
 
+
+**🛠️ Technology Stack**
+Database System: MySQL
+
+Modeling Tool: Microsoft visio (for ERD)
+
+Backend: (Proposed) 
+
+Frontend: (Proposed) HTML, CSS, JavaScript, React
+
