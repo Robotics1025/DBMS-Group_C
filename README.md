@@ -3,7 +3,7 @@
 A comprehensive Database Management System designed to streamline the operations of a modern bike rental business. This system facilitates bike rentals, returns, customer management, payment processing, and detailed reporting.
 
 
-**Purpose & Scope**
+**🎯 Purpose & Scope**
 The primary purpose of this DBMS is to effectively manage all core operations of a bike rental service, including:
 
 Bike Management: Tracking inventory, status, and location of all bicycles.
