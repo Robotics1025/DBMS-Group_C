@@ -76,15 +76,14 @@ Frontend: (Proposed) HTML, CSS, JavaScript, React
 
 
 **📁 Repository Structure**
-
 DBMS-Bike-Rental_Group_C/
 ├── Documentation/
-│   └── SDLC-Bike-Rental_DBMS(GROUP_C).pdf  # Project analysis & design
+│ └── SDLC-Bike-Rental_DBMS(GROUP_C).pdf
 ├── Database/
-│   ├── Schema/                     # SQL files for table creation
-│   └── Sample_Data/                # SQL files for sample data (dummy data)
-├── Source_Code/                    # Application source code 
-└── README.md                       # This file
+│ ├── Schema/
+│ └── Sample_Data/
+├── Source_Code/
+└── README.md
 
 
 **👨‍💻 Development Team (Group C)**
