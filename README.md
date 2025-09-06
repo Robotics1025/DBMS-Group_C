@@ -15,3 +15,13 @@ Rental/Return Processing: Managing the complete lifecycle of a rental transactio
 Payment Processing: Recording transactions via multiple payment methods.
 
 Reporting: Generating insights into revenue, bike usage, and business performance.
+
+
+**👥 Main User Groups**
+The system is designed for three distinct user groups:
+
+Customers: Can view available bikes, register accounts, rent bikes, view rental history, and make payments.
+
+Staff: Can process rentals and returns, manage bike inventory, check bike conditions, and handle customer accounts.
+
+Administrators: Have full system access to generate reports, manage all data, manage staff accounts, and configure rental locations.
