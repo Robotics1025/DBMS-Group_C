@@ -37,11 +37,11 @@ Administrators: Have full system access to generate reports, manage all data, ma
 
 
 
-## 🗄️ Core Entities & Database Schema
+# 🗄️ Core Entities & Database Schema
 
 The system is built around the following key entities and their relationships:
 
-# Database Entities
+## Database Entities
 
 | Entity            | Description                                      | Key Attributes                                                                 |
 |-------------------|--------------------------------------------------|--------------------------------------------------------------------------------|
