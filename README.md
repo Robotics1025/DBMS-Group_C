@@ -1,9 +1,11 @@
 # DBMS-Group_C
 **BIKE RENTAL DATABASE MANAGEMENT SYSTEM**
+
 A comprehensive Database Management System designed to streamline the operations of a modern bike rental business. This system facilitates bike rentals, returns, customer management, payment processing, and detailed reporting.
 
 
 **🎯 Purpose & Scope**
+
 The primary purpose of this DBMS is to effectively manage all core operations of a bike rental service, including:
 
 Bike Management: Tracking inventory, status, and location of all bicycles.
@@ -18,6 +20,7 @@ Reporting: Generating insights into revenue, bike usage, and business performanc
 
 
 **👥 Main User Groups**
+
 The system is designed for three distinct user groups:
 
 Customers: Can view available bikes, register accounts, rent bikes, view rental history, and make payments.
@@ -28,6 +31,7 @@ Administrators: Have full system access to generate reports, manage all data, ma
 
 
 **🗄️ Core Entities & Database Schema**
+
 The system is built around the following key entities and their relationships:
 
 # Database Entities
@@ -50,6 +54,7 @@ A detailed Entity-Relationship Diagram (ERD) is available in the project documen
 
 
 **⚙️ Key System Functions**
+
 -Bike & Inventory Management: Add, update, remove, and track the status and location of bikes.
 
 -Customer Account Management: Register new customers and maintain their profiles and history.
@@ -65,6 +70,7 @@ A detailed Entity-Relationship Diagram (ERD) is available in the project documen
 
 
 **🛠️ Technology Stack**
+
 Database System: MySQL
 
 Modeling Tool: Microsoft visio (for ERD)
