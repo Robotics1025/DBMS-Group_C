@@ -25,3 +25,54 @@ Customers: Can view available bikes, register accounts, rent bikes, view rental 
 Staff: Can process rentals and returns, manage bike inventory, check bike conditions, and handle customer accounts.
 
 Administrators: Have full system access to generate reports, manage all data, manage staff accounts, and configure rental locations.
+
+
+**🗄️ Core Entities & Database Schema**
+The system is built around the following key entities and their relationships:
+
+|🗄️ Core Entities & Database Schema
+The system is built around the following key entities and their relationships:
+
+
+# Database Entities
+
+| Entity              | Description                                        | Key Attributes                                                                   |
+|--------------------|----------------------------------------------------|----------------------------------------------------------------------------------|
+| **Customer**       | Individuals who rent bikes.                        | `CustomerID` (PK), `FirstName`,`LastName`, `Email`, `PasswordHash`             |
+| **Bike**           | Individual bicycles in the inventory.              | `BikeID` (PK), `BikeSerialNumber`, `Model`, `BikeType`, `CurrentStatus`, `RentalRatePerMinute` |
+| **Rental**         | Core transactional record of a bike rental.       | `RentalID` (PK), `CustomerID` (FK), `BikeID` (FK), `RentalStartDate`, `RentalEndDate`, `TotalCost` |
+| **Location**       | Physical stations for renting/returning bikes.    | `LocationID` (PK), `LocationName`, `Address`, `Capacity`                        |
+| **Staff**          | Employees managing operations.                     | `StaffID` (PK), `FirstName`, `LastName`, `Role`, `LocationID` (FK)              |
+| **Payment**        | Records of all financial transactions.            | `PaymentID` (PK), `RentalID` (FK), `Amount`, `PaymentMethod`, `TransactionID`   |
+| **Maintenance Log** | History of bike servicing and repairs.            | `LogID` (PK), `BikeID` (FK), `MaintenanceDate`, `Description`, `Cost`           |
+
+## Legend
+- **PK**: Primary Key
+- **FK**: Foreign Key
+
+|Entity       |Description                                    |Key Attributes
+|-----------  |-----------------------------------------------|-----------------------------------------------------
+|**Customer** |Individual who rents a bike.                   | `CustomerID`(PK),`FirstName`,`LastName`, `Email`,
+                                                                `PasswordHash`
+|-------------|-----------------------------------------------|-----------------------------------------------------
+|**Bike**     | Individual bicycles in the inventory.         |`BikeID`(PK),`BikeSerialNumber`,`Model`,`BikeType`,
+                                                               `CurrentStatus`, `RentalRatePerMinute`
+|-------------|-----------------------------------------------|-----------------------------------------------------
+|**Rental**   | Core transactional record of a bike rental.   |`RentalID`(PK),`CustomerID`(FK),`BikeID`(FK), 
+                                                               `RentalStartDate`, `RentalEndDate`, `TotalCost` 
+|-------------|-----------------------------------------------|-----------------------------------------------------
+|**Location** |Physical stations for renting/returning bikes. |`LocationID`(PK),`LocationName`,`Address`, `Capacity`
+|-------------|-----------------------------------------------|-----------------------------------------------------
+|**Staff**    |Employees managing operations.                 |`StaffID`(PK),`FirstName`,`LastName`,`Role`, 
+                                                               `LocationID`(FK)
+|-------------|-----------------------------------------------|-----------------------------------------------------
+|**Payment**  |Records of all financial transactions.         |`PaymentID`(PK),`RentalID`(FK), `Amount`, 
+                                                               `PaymentMethod`, `TransactionID`   
+|-------------|-----------------------------------------------|-----------------------------------------------------
+|**Maintenance Log**|History of bike servicing and repairs.   |`LogID` (PK),`BikeID`(FK),`MaintenanceDate`, 
+                                                               `Description`, `Cost`   
+--------------------------------------------------------------------------------------------------------------------
+## Legend
+- **PK**: Primary Key
+- **FK**: Foreign Key        
+
