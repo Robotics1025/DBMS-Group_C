@@ -36,20 +36,6 @@ The system is built around the following key entities and their relationships:
 
 # Database Entities
 
-| Entity              | Description                                        | Key Attributes                                                                   |
-|--------------------|----------------------------------------------------|----------------------------------------------------------------------------------|
-| **Customer**       | Individuals who rent bikes.                        | `CustomerID` (PK), `FirstName`,`LastName`, `Email`, `PasswordHash`             |
-| **Bike**           | Individual bicycles in the inventory.              | `BikeID` (PK), `BikeSerialNumber`, `Model`, `BikeType`, `CurrentStatus`, `RentalRatePerMinute` |
-| **Rental**         | Core transactional record of a bike rental.       | `RentalID` (PK), `CustomerID` (FK), `BikeID` (FK), `RentalStartDate`, `RentalEndDate`, `TotalCost` |
-| **Location**       | Physical stations for renting/returning bikes.    | `LocationID` (PK), `LocationName`, `Address`, `Capacity`                        |
-| **Staff**          | Employees managing operations.                     | `StaffID` (PK), `FirstName`, `LastName`, `Role`, `LocationID` (FK)              |
-| **Payment**        | Records of all financial transactions.            | `PaymentID` (PK), `RentalID` (FK), `Amount`, `PaymentMethod`, `TransactionID`   |
-| **Maintenance Log** | History of bike servicing and repairs.            | `LogID` (PK), `BikeID` (FK), `MaintenanceDate`, `Description`, `Cost`           |
-
-## Legend
-- **PK**: Primary Key
-- **FK**: Foreign Key
-
 |Entity       |Description                                    |Key Attributes
 |-----------  |-----------------------------------------------|-----------------------------------------------------
 |**Customer** |Individual who rents a bike.                   | `CustomerID`(PK),`FirstName`,`LastName`, `Email`,
@@ -75,4 +61,22 @@ The system is built around the following key entities and their relationships:
 ## Legend
 - **PK**: Primary Key
 - **FK**: Foreign Key        
+
+A detailed Entity-Relationship Diagram (ERD) is available in the project documentation.
+
+
+
+**⚙️ Key System Functions**
+-Bike & Inventory Management: Add, update, remove, and track the status and location of bikes.
+
+-Customer Account Management: Register new customers and maintain their profiles and history.
+
+-Rental Process: Handle the complete process from bike check-out to check-in and cost calculation.
+
+-Payment Processing: Support for various payment methods (Credit Card, Mobile Money, Cash).
+
+-Maintenance Tracking: Log all service and repair activities for each bike.
+
+-Comprehensive Reporting: Generate reports on revenue, popular bikes, and high-traffic locations.
+
 
