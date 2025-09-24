@@ -104,16 +104,20 @@ npm install prisma --save-dev
 npm install @prisma/client
 
 ## Prisma Commands Cheat Sheet
-Command	Description
-npx prisma init	Initialize Prisma in your project.
-npx prisma migrate dev --name <name>	Apply migrations during development.
-npx prisma migrate deploy	Apply migrations in production.
-npx prisma generate	Generate Prisma Client.
-npx prisma studio	Open Prisma Studio (GUI for DB).
-npx prisma db pull	Pull existing database schema into Prisma.
-npx prisma db push	Push schema changes directly to DB (no migration).
-npx prisma migrate reset	Reset DB and reapply migrations (dev only).
-npx prisma format	Format schema.prisma file.
+## Prisma Commands Cheat Sheet
+
+| Command | Description | Example |
+|---------|-------------|---------|
+| `npx prisma init` | Initialize Prisma in your project. Creates `prisma/` folder and `.env`. | `npx prisma init` |
+| `npx prisma migrate dev --name <name>` | Apply migrations during development. Generates SQL migration files and updates DB. | `npx prisma migrate dev --name init` |
+| `npx prisma migrate deploy` | Apply pending migrations in production. | `npx prisma migrate deploy` |
+| `npx prisma generate` | Generate Prisma Client based on the current schema. | `npx prisma generate` |
+| `npx prisma studio` | Open Prisma Studio, a GUI to view and edit your database. | `npx prisma studio` |
+| `npx prisma db pull` | Pull an existing database schema into Prisma. | `npx prisma db pull` |
+| `npx prisma db push` | Push schema changes directly to the database (without generating migrations). | `npx prisma db push` |
+| `npx prisma migrate reset` | Reset the database and reapply all migrations (dev only). | `npx prisma migrate reset` |
+| `npx prisma format` | Format the `schema.prisma` file. | `npx prisma format` |
+
 
 
 ## 📁 Repository Structure
