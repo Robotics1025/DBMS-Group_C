@@ -119,7 +119,17 @@ npm install @prisma/client
 | `npx prisma format` | Format the `schema.prisma` file. | `npx prisma format` |
 
 
+## Workflow for Pulling Existing Database:
 
+npx prisma init → Initialize Prisma
+
+Set DATABASE_URL in .env
+
+npx prisma db pull → Pull existing schema
+
+npx prisma generate → Generate Prisma client
+
+npx prisma studio → Explore DB
 ## 📁 Repository Structure
 
 
