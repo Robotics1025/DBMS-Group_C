@@ -84,9 +84,9 @@ Database System: MySQL
 
 Modeling Tool: Microsoft visio (for ERD)
 
-Backend: (Proposed) 
+Backend: (NEXT JS) 
 
-Frontend: (Proposed) HTML, CSS, JavaScript, React
+Frontend: (NEXT JS),tailwincss and prisma for helping generarting the models 
 
 
 
