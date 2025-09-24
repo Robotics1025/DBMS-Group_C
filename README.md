@@ -86,7 +86,7 @@ Modeling Tool: Microsoft visio (for ERD)
 
 Backend: (NEXT JS) 
 
-Frontend: (NEXT JS),tailwincss and prisma for helping generarting the models 
+Frontend: (NEXT JS),tailwindcss and prisma for helping generarting the models 
 ## Prisma 
 is an ORM (Object-Relational Mapping) tool for Node.js/TypeScript. It helps you interact with databases (PostgreSQL, MySQL, SQLite, SQL Server, MongoDB) easily, without writing raw SQL.
 
