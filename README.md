@@ -87,7 +87,33 @@ Modeling Tool: Microsoft visio (for ERD)
 Backend: (NEXT JS) 
 
 Frontend: (NEXT JS),tailwincss and prisma for helping generarting the models 
+## Prisma 
+is an ORM (Object-Relational Mapping) tool for Node.js/TypeScript. It helps you interact with databases (PostgreSQL, MySQL, SQLite, SQL Server, MongoDB) easily, without writing raw SQL.
 
+## It has three main parts:
+
+Prisma Client – auto-generated library to query your database.
+
+Prisma Migrate – for database migrations.
+
+Prisma Studio – a GUI to explore your database.
+--npm init -y   (intailize the nodejs prisma)
+
+## Install Prisma CLI and Client:
+npm install prisma --save-dev
+npm install @prisma/client
+
+## Prisma Commands Cheat Sheet
+Command	Description
+npx prisma init	Initialize Prisma in your project.
+npx prisma migrate dev --name <name>	Apply migrations during development.
+npx prisma migrate deploy	Apply migrations in production.
+npx prisma generate	Generate Prisma Client.
+npx prisma studio	Open Prisma Studio (GUI for DB).
+npx prisma db pull	Pull existing database schema into Prisma.
+npx prisma db push	Push schema changes directly to DB (no migration).
+npx prisma migrate reset	Reset DB and reapply migrations (dev only).
+npx prisma format	Format schema.prisma file.
 
 
 ## 📁 Repository Structure
