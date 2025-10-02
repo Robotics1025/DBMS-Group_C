@@ -84,6 +84,7 @@ Database System: MySQL
 
 Modeling Tool: Microsoft visio (for ERD)
 
+<<<<<<< HEAD
 Backend: (NEXT JS) 
 
 Frontend: (NEXT JS),tailwindcss and prisma for helping generarting the models 
@@ -130,6 +131,14 @@ npx prisma db pull → Pull existing schema
 npx prisma generate → Generate Prisma client
 
 npx prisma studio → Explore DB
+=======
+Backend: (Proposed) 
+
+Frontend: (Proposed) HTML, CSS, JavaScript, React
+
+
+
+>>>>>>> 3c66385 (the frontend)
 ## 📁 Repository Structure
 
 
@@ -162,4 +171,8 @@ Mugole Joel - (GitHub: Robotics1025)
 
 Kigozi Allan - (GitHub:)
 
+<<<<<<< HEAD
 Nalubega Shadia - (GitHub:)
+=======
+Nalubega Shadia - (GitHub:)
+>>>>>>> 3c66385 (the frontend)
