@@ -110,7 +110,7 @@ model rental {
   ExpectedReturn DateTime             @db.DateTime(0)
   RentalEnd      DateTime?            @db.DateTime(0)
   TotalCost      Decimal?             @default(0.00) @db.Decimal(8, 2)
-  PaymentStatus  rental_PaymentStatus
+  PaymentStatus  rental_PaymentStatus @default(Pending)
   PromoID        Int?                 @db.UnsignedInt
   feedback       feedback?
   payment        payment[]
