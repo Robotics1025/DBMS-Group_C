@@ -1,4 +1,6 @@
-<<<<<<< HEAD
+CREATE DATABASE BikeRentalDB;
+USE BikeRentalDB;
+
 -- Create the Customer Table
 CREATE TABLE Customer (
     CustomerID INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -101,9 +103,6 @@ CREATE TABLE Feedback (
     PRIMARY KEY (FeedbackID),
     FOREIGN KEY (RentalID) REFERENCES Rental(RentalID)
 );
-=======
-CREATE DATABASE BikeRentalDB;
-USE BikeRentalDB;
 
 -- =========================
 -- 1. User Table
@@ -139,17 +138,7 @@ CREATE TABLE UserSession (
 );
 
 -- =========================
--- 3. Location Table
--- =========================
-CREATE TABLE Location (
-    LocationID INT UNSIGNED NOT NULL AUTO_INCREMENT,
-    LocationName VARCHAR(100) NOT NULL UNIQUE,
-    Address VARCHAR(255) NOT NULL,
-    City VARCHAR(50) NOT NULL,
-    PhoneNumber VARCHAR(20),
-    Capacity INT UNSIGNED,
-    PRIMARY KEY (LocationID)
-);
+
 
 -- =========================
 -- 4. Bike Table
@@ -350,5 +339,4 @@ BEGIN
     WHERE BikeID = NEW.BikeID;
 END$$
 
-DELIMITER ;
->>>>>>> 3c66385 (the frontend)
+
