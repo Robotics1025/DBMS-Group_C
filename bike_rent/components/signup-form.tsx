@@ -75,7 +75,7 @@ export function SignupForm({
       const { ConfirmPassword, Password, ...rest } = formData
       const apiData = {
         ...rest,
-        PasswordHash: Password, // Backend should hash
+        Password, // ✅ send as Password, not PasswordHash
       }
 
       console.log("Sending data to API:", apiData)
@@ -340,7 +340,6 @@ export function SignupForm({
           </div>
         </CardContent>
       </Card>
-
 
       <div className="text-muted-foreground *:[a]:hover:text-primary text-center text-xs text-balance *:[a]:underline *:[a]:underline-offset-4">
         By clicking continue, you agree to our <a href="#">Terms of Service</a>{" "}
