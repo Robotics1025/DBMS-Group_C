@@ -1,0 +1,174 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model bike {
+  BikeID              Int                @id @default(autoincrement()) @db.UnsignedInt
+  BikeSerialNumber    String             @unique(map: "BikeSerialNumber") @db.VarChar(50)
+  Model               String?            @db.VarChar(50)
+  BikeType            String             @db.VarChar(30)
+  CurrentStatus       bike_CurrentStatus @default(Available)
+  LastMaintenanceDate DateTime?          @db.Date
+  RentalRatePerMinute Decimal            @db.Decimal(5, 2)
+  LocationID          Int                @db.UnsignedInt
+  location            location           @relation(fields: [LocationID], references: [LocationID], onDelete: NoAction, onUpdate: NoAction, map: "bike_ibfk_1")
+  bikemovement        bikemovement[]
+  maintenance         maintenance[]
+  rental              rental[]
+
+  @@index([LocationID], map: "LocationID")
+}
+
+model bikemovement {
+  MovementID                                     Int      @id @default(autoincrement()) @db.UnsignedInt
+  BikeID                                         Int      @db.UnsignedInt
+  FromLocationID                                 Int      @db.UnsignedInt
+  ToLocationID                                   Int      @db.UnsignedInt
+  MovementDate                                   DateTime @default(now()) @db.DateTime(0)
+  StaffID                                        Int      @db.UnsignedInt
+  Notes                                          String?  @db.Text
+  bike                                           bike     @relation(fields: [BikeID], references: [BikeID], onDelete: NoAction, onUpdate: NoAction, map: "bikemovement_ibfk_1")
+  location_bikemovement_FromLocationIDTolocation location @relation("bikemovement_FromLocationIDTolocation", fields: [FromLocationID], references: [LocationID], onDelete: NoAction, onUpdate: NoAction, map: "bikemovement_ibfk_2")
+  location_bikemovement_ToLocationIDTolocation   location @relation("bikemovement_ToLocationIDTolocation", fields: [ToLocationID], references: [LocationID], onDelete: NoAction, onUpdate: NoAction, map: "bikemovement_ibfk_3")
+  user                                           user     @relation(fields: [StaffID], references: [UserID], onDelete: NoAction, onUpdate: NoAction, map: "bikemovement_ibfk_4")
+
+  @@index([BikeID], map: "BikeID")
+  @@index([FromLocationID], map: "FromLocationID")
+  @@index([StaffID], map: "StaffID")
+  @@index([ToLocationID], map: "ToLocationID")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model feedback {
+  FeedbackID   Int      @id @default(autoincrement()) @db.UnsignedInt
+  RentalID     Int      @unique(map: "RentalID") @db.UnsignedInt
+  Rating       Int      @db.TinyInt
+  Comments     String?  @db.Text
+  FeedbackDate DateTime @db.DateTime(0)
+  rental       rental   @relation(fields: [RentalID], references: [RentalID], onDelete: NoAction, onUpdate: NoAction, map: "feedback_ibfk_1")
+}
+
+model location {
+  LocationID                                         Int            @id @default(autoincrement()) @db.UnsignedInt
+  LocationName                                       String         @unique(map: "LocationName") @db.VarChar(100)
+  Address                                            String         @db.VarChar(255)
+  City                                               String         @db.VarChar(50)
+  PhoneNumber                                        String?        @db.VarChar(20)
+  Capacity                                           Int?           @db.UnsignedInt
+  bike                                               bike[]
+  bikemovement_bikemovement_FromLocationIDTolocation bikemovement[] @relation("bikemovement_FromLocationIDTolocation")
+  bikemovement_bikemovement_ToLocationIDTolocation   bikemovement[] @relation("bikemovement_ToLocationIDTolocation")
+}
+
+model maintenance {
+  MaintenanceID   Int      @id @default(autoincrement()) @db.UnsignedInt
+  BikeID          Int      @db.UnsignedInt
+  StaffID         Int      @db.UnsignedInt
+  MaintenanceDate DateTime @db.DateTime(0)
+  Description     String   @db.Text
+  Cost            Decimal  @db.Decimal(8, 2)
+  bike            bike     @relation(fields: [BikeID], references: [BikeID], onDelete: NoAction, onUpdate: NoAction, map: "maintenance_ibfk_1")
+  user            user     @relation(fields: [StaffID], references: [UserID], onDelete: NoAction, onUpdate: NoAction, map: "maintenance_ibfk_2")
+
+  @@index([BikeID], map: "BikeID")
+  @@index([StaffID], map: "StaffID")
+}
+
+model payment {
+  PaymentID     Int      @id @default(autoincrement()) @db.UnsignedInt
+  RentalID      Int      @db.UnsignedInt
+  PaymentDate   DateTime @db.DateTime(0)
+  Amount        Decimal  @db.Decimal(8, 2)
+  PaymentMethod String   @db.VarChar(50)
+  TransactionID String   @unique(map: "TransactionID") @db.VarChar(100)
+  rental        rental   @relation(fields: [RentalID], references: [RentalID], onDelete: NoAction, onUpdate: NoAction, map: "payment_ibfk_1")
+
+  @@index([RentalID], map: "RentalID")
+}
+
+model promo {
+  PromoID         Int      @id @default(autoincrement()) @db.UnsignedInt
+  PromoCode       String   @unique(map: "PromoCode") @db.VarChar(50)
+  DiscountPercent Decimal  @db.Decimal(5, 2)
+  ValidFrom       DateTime @db.DateTime(0)
+  ValidUntil      DateTime @db.DateTime(0)
+  MaxUsage        Int?     @db.UnsignedInt
+  rental          rental[]
+}
+
+model rental {
+  RentalID       Int                  @id @default(autoincrement()) @db.UnsignedInt
+  CustomerID     Int                  @db.UnsignedInt
+  BikeID         Int                  @db.UnsignedInt
+  RentalStart    DateTime             @db.DateTime(0)
+  ExpectedReturn DateTime             @db.DateTime(0)
+  RentalEnd      DateTime?            @db.DateTime(0)
+  TotalCost      Decimal?             @default(0.00) @db.Decimal(8, 2)
+  PaymentStatus  rental_PaymentStatus
+  PromoID        Int?                 @db.UnsignedInt
+  feedback       feedback?
+  payment        payment[]
+  user           user                 @relation(fields: [CustomerID], references: [UserID], onDelete: NoAction, onUpdate: NoAction, map: "rental_ibfk_1")
+  bike           bike                 @relation(fields: [BikeID], references: [BikeID], onDelete: NoAction, onUpdate: NoAction, map: "rental_ibfk_2")
+  promo          promo?               @relation(fields: [PromoID], references: [PromoID], onDelete: NoAction, onUpdate: NoAction, map: "rental_ibfk_3")
+
+  @@index([BikeID], map: "BikeID")
+  @@index([CustomerID], map: "CustomerID")
+  @@index([PromoID], map: "PromoID")
+}
+
+model user {
+  UserID           Int            @id @default(autoincrement()) @db.UnsignedInt
+  NationalID       String         @unique(map: "NationalID") @db.VarChar(20)
+  FirstName        String         @db.VarChar(50)
+  LastName         String         @db.VarChar(50)
+  Email            String         @unique(map: "Email") @db.VarChar(100)
+  PhoneNumber      String?        @db.VarChar(20)
+  PasswordHash     String         @db.VarChar(255)
+  DateOfBirth      DateTime?      @db.Date
+  Role             user_Role
+  DateHired        DateTime?      @db.Date
+  RegistrationDate DateTime?      @db.DateTime(0)
+  LoyaltyPoints    Int?           @default(0) @db.UnsignedInt
+  bikemovement     bikemovement[]
+  maintenance      maintenance[]
+  rental           rental[]
+  usersession      usersession[]
+}
+
+model usersession {
+  SessionID String   @id @db.Char(64)
+  UserID    Int      @db.UnsignedInt
+  CreatedAt DateTime @default(now()) @db.DateTime(0)
+  ExpiresAt DateTime @db.DateTime(0)
+  UserAgent String?  @db.VarChar(255)
+  IPAddress String?  @db.VarChar(45)
+  IsActive  Boolean  @default(true)
+  user      user     @relation(fields: [UserID], references: [UserID], onDelete: Cascade, onUpdate: NoAction, map: "usersession_ibfk_1")
+
+  @@index([UserID], map: "UserID")
+}
+
+enum bike_CurrentStatus {
+  Available
+  Rented
+  In_Maintenance @map("In Maintenance")
+}
+
+enum rental_PaymentStatus {
+  Pending
+  Paid
+  Cancelled
+}
+
+enum user_Role {
+  Customer
+  Staff
+  Administrator
+}
