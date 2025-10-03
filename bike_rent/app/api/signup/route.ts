@@ -1,84 +1,81 @@
 // app/api/signup/route.ts
-import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from '../../generated/prisma/client'
-import bcrypt from "bcryptjs";
+import { NextResponse } from "next/server"
+import bcrypt from "bcrypt"
+import { PrismaClient } from "@/app/generated/prisma"
 
-const prisma = new PrismaClient();
+// Initialize Prisma Client
+const prisma = new PrismaClient()
 
-export async function POST(req: NextRequest) {
+export async function POST(request: Request) {
   try {
-    console.log("Signup request received");
-    
-    const body = await req.json();
-    console.log("Request body:", body);
-    
-    const { name, email, password, role = "USER" } = body;
+    const body = await request.json()
+    const { NationalID, FirstName, LastName, Email, Password, PhoneNumber, DateOfBirth, Role } = body
 
-    if (!name || !email || !password) {
-      console.log("Missing fields:", { name, email, password });
+    // Validate required fields
+    if (!NationalID || !FirstName || !LastName || !Email || !Password) {
       return NextResponse.json(
-        { error: "Name, email, and password are required" },
+        { error: "NationalID, FirstName, LastName, Email, and Password are required" },
         { status: 400 }
-      );
+      )
     }
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      console.log("Invalid email format:", email);
-      return NextResponse.json(
-        { error: "Invalid email format" },
-        { status: 400 }
-      );
-    }
-
-    // Check if user already exists
-    const existingUser = await prisma.users.findUnique({
-      where: { email },
-    });
-
+    // Check if user exists
+    const existingUser = await prisma.user.findUnique({ where: { Email } })
     if (existingUser) {
-      console.log("User already exists:", email);
-      return NextResponse.json(
-        { error: "User with this email already exists" },
-        { status: 409 }
-      );
+      return NextResponse.json({ error: "User already exists" }, { status: 400 })
     }
 
     // Hash password
-    const hashedPassword = await bcrypt.hash(password, 12);
+    const passwordHash = await bcrypt.hash(Password, 10)
 
     // Create user
-    const user = await prisma.users.create({
+    const newUser = await prisma.user.create({
       data: {
-        name,
-        email,
-        password_hash: hashedPassword,
-        role,
+        NationalID,
+        FirstName,
+        LastName,
+        Email,
+        PasswordHash: passwordHash,
+        PhoneNumber,
+        DateOfBirth: DateOfBirth ? new Date(DateOfBirth) : null,
+        Role,
+        RegistrationDate: new Date(),
       },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        created_at: true,
-      },
-    });
+    })
 
-    console.log("User created successfully:", user.email);
-    
-    return NextResponse.json(
-      {
-        message: "User created successfully",
-        user,
+    // Create session
+    const sessionId = crypto.randomUUID()
+    const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7) // 7 days
+
+    await prisma.usersession.create({
+      data: {
+        SessionID: sessionId,
+        UserID: newUser.UserID,
+        ExpiresAt: expiresAt,
+        IsActive: true,
       },
-      { status: 201 }
-    );
+    })
+
+    // Return user + session
+    return NextResponse.json({
+      message: "Signup successful",
+      user: {
+        id: newUser.UserID,
+        NationalID: newUser.NationalID,
+        FirstName: newUser.FirstName,
+        LastName: newUser.LastName,
+        Email: newUser.Email,
+        Role: newUser.Role,
+      },
+      session: {
+        sessionId,
+        expiresAt,
+      },
+    })
   } catch (error) {
-    console.error("Signup error:", error);
-    return NextResponse.json(
-      { error: "Internal server error during signup" },
-      { status: 500 }
-    );
+    console.error("Signup error:", error)
+    return NextResponse.json({ error: "Signup failed" }, { status: 500 })
+  } finally {
+    await prisma.$disconnect() // Close the connection after request
   }
 }

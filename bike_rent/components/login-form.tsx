@@ -10,36 +10,21 @@ import Image from "next/image"
 import Link from "next/link"
 import { Loader2 } from "lucide-react"
 import { toast } from "react-hot-toast"
-import { signIn, getCsrfToken } from "next-auth/react"
 import { useRouter, useSearchParams } from "next/navigation"
 
-export function LoginForm({
-  className,
-  ...props
-}: React.ComponentProps<"div">) {
+export function LoginForm({ className, ...props }: React.ComponentProps<"div">) {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
-  const [csrfToken, setCsrfToken] = useState("")
   const router = useRouter()
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard"
   const message = searchParams.get("message")
 
-  // Get CSRF token for security
-  useEffect(() => {
-    const getToken = async () => {
-      const token = await getCsrfToken()
-      setCsrfToken(token || "")
-    }
-    getToken()
-  }, [])
-
   // Show success message if redirected from signup
   useEffect(() => {
     if (message) {
       toast.success(message)
-      // Clear the message from URL
       const url = new URL(window.location.href)
       url.searchParams.delete("message")
       window.history.replaceState({}, "", url.toString())
@@ -48,35 +33,32 @@ export function LoginForm({
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    
     if (!email || !password) {
       toast.error("Please fill in all fields")
       return
     }
 
     setLoading(true)
-    
+
     try {
-      const result = await signIn("credentials", {
-        email,
-        password,
-        redirect: false,
-        callbackUrl,
+      const res = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ Email: email, Password: password }),
       })
 
-      if (result?.error) {
-        console.error("Login error:", result.error)
-        
-        // More specific error messages
-        if (result.error.includes("credentials") || result.error.includes("password")) {
-          toast.error("Invalid email or password")
-        } else {
-          toast.error("Login failed. Please try again.")
-        }
-      } else if (result?.ok) {
-        toast.success("Login successful!")
-        router.push(callbackUrl)
+      const data = await res.json()
+
+      if (!res.ok) {
+        toast.error(data.error || "Login failed")
+        return
       }
+
+      // Save sessionId in cookie for middleware protection
+      document.cookie = `sessionId=${data.sessionId}; path=/; max-age=${7 * 24 * 60 * 60}`
+
+      toast.success("Login successful!")
+      router.push(callbackUrl)
     } catch (err) {
       console.error("Login failed:", err)
       toast.error("Login failed. Please try again.")
@@ -86,12 +68,7 @@ export function LoginForm({
   }
 
   const handleSocialLogin = async (provider: string) => {
-    try {
-      await signIn(provider, { callbackUrl })
-    } catch (error) {
-      console.error(`${provider} login failed:`, error)
-      toast.error(`${provider} login failed. Please try again.`)
-    }
+    toast.error(`${provider} login is not implemented yet.`)
   }
 
   return (
@@ -100,10 +77,6 @@ export function LoginForm({
         <CardContent className="grid p-0 md:grid-cols-2">
           {/* Left Side → Form */}
           <form onSubmit={handleLogin} className="p-6 md:p-8 space-y-6">
-            {/* CSRF Token (hidden) */}
-            <input name="csrfToken" type="hidden" defaultValue={csrfToken} />
-            
-            {/* Header */}
             <div className="flex flex-col items-center text-center space-y-1">
               <h1 className="text-2xl font-bold">Welcome back</h1>
               <p className="text-muted-foreground text-balance">
@@ -165,49 +138,16 @@ export function LoginForm({
 
             {/* Social Auth */}
             <div className="grid grid-cols-3 gap-4">
-              <Button 
-                variant="outline" 
-                type="button" 
-                className="w-full"
-                onClick={() => handleSocialLogin("instagram")}
-                disabled={loading}
-              >
-                <Image
-                  src="/instagram.svg"
-                  alt="Instagram"
-                  width={20}
-                  height={20}
-                />
+              <Button variant="outline" type="button" className="w-full" onClick={() => handleSocialLogin("instagram")} disabled={loading}>
+                <Image src="/instagram.svg" alt="Instagram" width={20} height={20} />
                 <span className="sr-only">Login with Instagram</span>
               </Button>
-              <Button 
-                variant="outline" 
-                type="button" 
-                className="w-full"
-                onClick={() => handleSocialLogin("google")}
-                disabled={loading}
-              >
-                <Image
-                  src="/google.svg"
-                  alt="Google"
-                  width={20}
-                  height={20}
-                />
+              <Button variant="outline" type="button" className="w-full" onClick={() => handleSocialLogin("google")} disabled={loading}>
+                <Image src="/google.svg" alt="Google" width={20} height={20} />
                 <span className="sr-only">Login with Google</span>
               </Button>
-              <Button 
-                variant="outline" 
-                type="button" 
-                className="w-full"
-                onClick={() => handleSocialLogin("microsoft")}
-                disabled={loading}
-              >
-                <Image
-                  src="/microsoft.svg"
-                  alt="Microsoft"
-                  width={20}
-                  height={20}
-                />
+              <Button variant="outline" type="button" className="w-full" onClick={() => handleSocialLogin("microsoft")} disabled={loading}>
+                <Image src="/microsoft.svg" alt="Microsoft" width={20} height={20} />
                 <span className="sr-only">Login with Microsoft</span>
               </Button>
             </div>
@@ -215,10 +155,7 @@ export function LoginForm({
             {/* Sign Up Link */}
             <div className="text-center text-sm">
               Don&apos;t have an account?{" "}
-              <Link
-                href="/signup"
-                className="underline underline-offset-4 hover:text-primary"
-              >
+              <Link href="/signup" className="underline underline-offset-4 hover:text-primary">
                 Sign up
               </Link>
             </div>

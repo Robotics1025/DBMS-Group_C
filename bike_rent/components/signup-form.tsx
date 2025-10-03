@@ -27,11 +27,15 @@ export function SignupForm({
   const [loadingProvider, setLoadingProvider] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
-    name: "", // Changed from username to name
-    email: "",
-    role: "",
-    password: "",
-    confirmPassword: "", // Keep for UI validation only
+    NationalID: "",
+    FirstName: "",
+    LastName: "",
+    Email: "",
+    PhoneNumber: "",
+    DateOfBirth: "",
+    Role: "",
+    Password: "",
+    ConfirmPassword: "",
   })
 
   const handleChange = (field: string, value: string) => {
@@ -39,64 +43,66 @@ export function SignupForm({
   }
 
   const nextStep = () => {
-    // Validate current step before proceeding
-    if (step === 1 && (!formData.name || !formData.email)) {
-      toast.error("Please fill in all fields")
+    if (step === 1 && (!formData.NationalID || !formData.FirstName || !formData.LastName || !formData.Email)) {
+      toast.error("Please fill in all required fields")
       return
     }
-    if (step === 2 && !formData.role) {
+    if (step === 2 && !formData.Role) {
       toast.error("Please select a role")
       return
     }
     step < 3 && setStep(step + 1)
   }
-  
+
   const prevStep = () => step > 1 && setStep(step - 1)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
-    // Validate passwords match
-    if (formData.password !== formData.confirmPassword) {
+
+    if (formData.Password !== formData.ConfirmPassword) {
       toast.error("Passwords do not match")
       return
     }
-    
-    // Validate password strength
-    if (formData.password.length < 6) {
+
+    if (formData.Password.length < 6) {
       toast.error("Password must be at least 6 characters")
       return
     }
 
     setLoading(true)
     try {
-      // Send only the required fields to the API
-      const { confirmPassword, ...apiData } = formData
-      
+      // Prepare data for API
+      const { ConfirmPassword, Password, ...rest } = formData
+      const apiData = {
+        ...rest,
+        PasswordHash: Password, // Backend should hash
+      }
+
       console.log("Sending data to API:", apiData)
-      
+
       const res = await fetch("/api/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(apiData),
       })
-      
+
       const data = await res.json()
       console.log("API response:", data)
-      
+
       if (res.ok) {
         toast.success("Signup successful! You can now log in.")
-        // Reset form
         setFormData({
-          name: "",
-          email: "",
-          role: "",
-          password: "",
-          confirmPassword: "",
+          NationalID: "",
+          FirstName: "",
+          LastName: "",
+          Email: "",
+          PhoneNumber: "",
+          DateOfBirth: "",
+          Role: "",
+          Password: "",
+          ConfirmPassword: "",
         })
         setStep(1)
-        // Optionally redirect to login
-        // router.push("/login")
       } else {
         toast.error(data.error || "Signup failed")
       }
@@ -110,7 +116,6 @@ export function SignupForm({
 
   const handleSocialLogin = async (provider: string) => {
     setLoadingProvider(provider)
-    // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 2000))
     console.log(`Social signup with: ${provider}`)
     setLoadingProvider(null)
@@ -122,7 +127,6 @@ export function SignupForm({
         <CardContent className="grid p-0 md:grid-cols-2">
           <form className="p-6 md:p-8 w-full" onSubmit={handleSubmit}>
             <div className="flex flex-col gap-6">
-              {/* Header */}
               <div className="flex flex-col items-center text-center">
                 <h1 className="text-2xl font-bold">Create an account</h1>
                 <p className="text-muted-foreground text-balance">
@@ -130,7 +134,6 @@ export function SignupForm({
                 </p>
               </div>
 
-              {/* Progress with numbers */}
               <div className="flex items-center justify-between mb-2">
                 {[1, 2, 3].map((num) => (
                   <div
@@ -148,100 +151,134 @@ export function SignupForm({
               </div>
               <Progress value={(step / 3) * 100} className="w-full" />
 
-              {/* Step 1 → Name & Email */}
+              {/* Step 1 → NationalID, FirstName, LastName, Email */}
               {step === 1 && (
                 <div className="space-y-4">
                   <div className="grid gap-3">
-                    <Label htmlFor="name">Full Name</Label> {/* Changed from Username */}
+                    <Label htmlFor="NationalID">NationalID</Label>
                     <Input
-                      id="name"
+                      id="NationalID"
                       type="text"
-                      placeholder="Your Full Name"
-                      value={formData.name}
-                      onChange={(e) => handleChange("name", e.target.value)}
+                      placeholder="Enter your NationalID"
+                      value={formData.NationalID}
+                      onChange={(e) => handleChange("NationalID", e.target.value)}
                       required
                     />
                   </div>
                   <div className="grid gap-3">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="FirstName">First Name</Label>
                     <Input
-                      id="email"
+                      id="FirstName"
+                      type="text"
+                      placeholder="First Name"
+                      value={formData.FirstName}
+                      onChange={(e) => handleChange("FirstName", e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="grid gap-3">
+                    <Label htmlFor="LastName">Last Name</Label>
+                    <Input
+                      id="LastName"
+                      type="text"
+                      placeholder="Last Name"
+                      value={formData.LastName}
+                      onChange={(e) => handleChange("LastName", e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="grid gap-3">
+                    <Label htmlFor="Email">Email</Label>
+                    <Input
+                      id="Email"
                       type="email"
-                      placeholder="m@example.com"
-                      value={formData.email}
-                      onChange={(e) => handleChange("email", e.target.value)}
+                      placeholder="Email"
+                      value={formData.Email}
+                      onChange={(e) => handleChange("Email", e.target.value)}
                       required
                     />
                   </div>
                 </div>
               )}
 
-              {/* Step 2 → Role */}
+              {/* Step 2 → PhoneNumber, DateOfBirth, Role */}
               {step === 2 && (
                 <div className="space-y-4">
                   <div className="grid gap-3">
-                    <Label htmlFor="role">Role</Label>
+                    <Label htmlFor="PhoneNumber">Phone Number</Label>
+                    <Input
+                      id="PhoneNumber"
+                      type="tel"
+                      placeholder="Optional"
+                      value={formData.PhoneNumber}
+                      onChange={(e) => handleChange("PhoneNumber", e.target.value)}
+                    />
+                  </div>
+                  <div className="grid gap-3">
+                    <Label htmlFor="DateOfBirth">Date of Birth</Label>
+                    <Input
+                      id="DateOfBirth"
+                      type="date"
+                      placeholder="Optional"
+                      value={formData.DateOfBirth}
+                      onChange={(e) => handleChange("DateOfBirth", e.target.value)}
+                    />
+                  </div>
+                  <div className="grid gap-3">
+                    <Label htmlFor="Role">Role</Label>
                     <Select
-                      onValueChange={(val) => handleChange("role", val)}
-                      value={formData.role}
+                      onValueChange={(val) => handleChange("Role", val)}
+                      value={formData.Role}
                     >
-                      <SelectTrigger
-                        id="role"
-                        className="rounded-lg border bg-background px-3 py-2 shadow-sm focus:ring-2 focus:ring-primary focus:border-primary transition"
-                      >
+                      <SelectTrigger id="Role" className="rounded-lg border px-3 py-2">
                         <SelectValue placeholder="Select a role" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="admin">Admin</SelectItem>
-                        <SelectItem value="manager">Manager</SelectItem>
-                        <SelectItem value="user">User</SelectItem>
+                        <SelectItem value="Customer">Customer</SelectItem>
+                        <SelectItem value="Staff">Staff</SelectItem>
+                        <SelectItem value="Administrator">Administrator</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
               )}
 
-              {/* Step 3 → Password & Confirm */}
+              {/* Step 3 → Password & Confirm Password */}
               {step === 3 && (
                 <div className="space-y-4">
                   <div className="grid gap-3">
-                    <Label htmlFor="password">Password</Label>
+                    <Label htmlFor="Password">Password</Label>
                     <Input
-                      id="password"
+                      id="Password"
                       type="password"
                       placeholder="Enter password (min 6 characters)"
-                      value={formData.password}
-                      onChange={(e) => handleChange("password", e.target.value)}
+                      value={formData.Password}
+                      onChange={(e) => handleChange("Password", e.target.value)}
                       required
                     />
                   </div>
                   <div className="grid gap-3">
-                    <Label htmlFor="confirmPassword">Confirm Password</Label>
+                    <Label htmlFor="ConfirmPassword">Confirm Password</Label>
                     <Input
-                      id="confirmPassword"
+                      id="ConfirmPassword"
                       type="password"
                       placeholder="Confirm password"
-                      value={formData.confirmPassword}
+                      value={formData.ConfirmPassword}
                       onChange={(e) =>
-                        handleChange("confirmPassword", e.target.value)
+                        handleChange("ConfirmPassword", e.target.value)
                       }
                       required
                     />
                   </div>
-                  {formData.password && formData.confirmPassword && formData.password !== formData.confirmPassword && (
+                  {formData.Password && formData.ConfirmPassword && formData.Password !== formData.ConfirmPassword && (
                     <p className="text-sm text-red-500">Passwords do not match</p>
                   )}
                 </div>
               )}
 
-              {/* Buttons */}
               <div className="flex justify-between">
                 {step > 1 && (
-                  <Button
-                    type="button"
-                    onClick={prevStep}
-                    className="bg-[hsl(27,96%,61%)] text-white hover:bg-[hsl(27,96%,51%)]"
-                  >
+                  <Button type="button" onClick={prevStep} className="bg-[hsl(27,96%,61%)] text-white hover:bg-[hsl(27,96%,51%)]">
                     Back
                   </Button>
                 )}
@@ -266,65 +303,24 @@ export function SignupForm({
                 </span>
               </div>
               <div className="grid grid-cols-3 gap-4">
-                <Button
-                  variant="outline"
-                  type="button"
-                  className="w-full"
-                  onClick={() => handleSocialLogin("instagram")}
-                  disabled={loadingProvider === "instagram"}
-                >
-                  {loadingProvider === "instagram" ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Image
-                      src="/instagram.svg"
-                      alt="Instagram"
-                      width={20}
-                      height={20}
-                    />
-                  )}
-                </Button>
-
-                <Button
-                  variant="outline"
-                  type="button"
-                  className="w-full"
-                  onClick={() => handleSocialLogin("google")}
-                  disabled={loadingProvider === "google"}
-                >
-                  {loadingProvider === "google" ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Image
-                      src="/google.svg"
-                      alt="Google"
-                      width={20}
-                      height={20}
-                    />
-                  )}
-                </Button>
-
-                <Button
-                  variant="outline"
-                  type="button"
-                  className="w-full"
-                  onClick={() => handleSocialLogin("microsoft")}
-                  disabled={loadingProvider === "microsoft"}
-                >
-                  {loadingProvider === "microsoft" ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Image
-                      src="/microsoft.svg"
-                      alt="Microsoft"
-                      width={20}
-                      height={20}
-                    />
-                  )}
-                </Button>
+                {["instagram", "google", "microsoft"].map((provider) => (
+                  <Button
+                    key={provider}
+                    variant="outline"
+                    type="button"
+                    className="w-full"
+                    onClick={() => handleSocialLogin(provider)}
+                    disabled={loadingProvider === provider}
+                  >
+                    {loadingProvider === provider ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Image src={`/${provider}.svg`} alt={provider} width={20} height={20} />
+                    )}
+                  </Button>
+                ))}
               </div>
 
-              {/* Already have an account */}
               <div className="text-center text-sm">
                 Already have an account?{" "}
                 <Link href="/login" className="underline underline-offset-4">
@@ -334,7 +330,6 @@ export function SignupForm({
             </div>
           </form>
 
-          {/* Side image */}
           <div className="bg-muted relative hidden md:block">
             <Image
               src="/home.jpg"
@@ -346,7 +341,7 @@ export function SignupForm({
         </CardContent>
       </Card>
 
-      {/* Footer */}
+
       <div className="text-muted-foreground *:[a]:hover:text-primary text-center text-xs text-balance *:[a]:underline *:[a]:underline-offset-4">
         By clicking continue, you agree to our <a href="#">Terms of Service</a>{" "}
         and <a href="#">Privacy Policy</a>.

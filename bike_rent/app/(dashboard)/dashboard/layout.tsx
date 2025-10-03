@@ -2,22 +2,40 @@
 
 import * as React from "react"
 import { SidebarNav } from "@/components/sidebar-nav"
-import { useSession, signOut } from "next-auth/react"
-import { redirect } from "next/navigation"
+import { useRouter } from "next/navigation"
+import { signOut } from "next-auth/react"
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const { data: session, status } = useSession()
+  const router = useRouter()
+  const [user, setUser] = React.useState<{ id: string; email: string } | null>(null)
+  const [loading, setLoading] = React.useState(true)
 
   React.useEffect(() => {
-    if (status === "loading") return
-    if (!session) redirect("/login")
-  }, [session, status])
+    // Read sessionId from cookie
+    const cookies = document.cookie.split("; ").reduce((acc: any, curr) => {
+      const [key, value] = curr.split("=")
+      acc[key] = value
+      return acc
+    }, {})
 
-  if (status === "loading") {
+    const sessionId = cookies["sessionId"]
+
+    if (!sessionId) {
+      router.push("/login")
+      return
+    }
+
+    // Optionally, you can fetch user info if needed
+    // But if middleware sets headers, server-side props can handle this
+    setUser({ id: sessionId, email: "" }) // minimal user info
+    setLoading(false)
+  }, [router])
+
+  if (loading) {
     return (
       <div className="flex h-screen items-center justify-center">
         <div className="text-center">
@@ -28,19 +46,21 @@ export default function DashboardLayout({
     )
   }
 
-  if (!session) return null
+  if (!user) return null // just in case
 
   return (
     <div className="min-h-screen bg-background">
       {/* Sidebar with mobile toggle */}
       <SidebarNav
-        user={session.user}
-        onLogout={() => signOut()}
+        user={user}
+        onLogout={() => {
+          document.cookie = "sessionId=; path=/; max-age=0" // clear session
+          router.push("/login")
+        }}
       />
 
       {/* Main content */}
       <div className="lg:pl-64 flex flex-col min-h-screen">
-        {/* Header */}
         
         <main className="flex-1 overflow-auto p-4 md:p-6">{children}</main>
       </div>
