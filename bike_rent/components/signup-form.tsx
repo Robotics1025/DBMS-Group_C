@@ -332,7 +332,7 @@ export function SignupForm({
 
           <div className="bg-muted relative hidden md:block">
             <Image
-              src="/home.jpg"
+              src="/bike.jpg"
               alt="Signup illustration"
               fill
               className="object-cover dark:brightness-[0.2] dark:grayscale"
