@@ -22,7 +22,7 @@ const mainItems = [
   { title: "Rentals", url: "/dashboard/rentals", icon: Clock },
   { title: "Customers", url: "/dashboard/customers", icon: Users },
   { title: "Analytics", url: "/analytics", icon: TrendingUp },
-  { title: "Stations", url: "/stations", icon: MapPin },
+  { title: "Stations", url: "/dashboard/stations", icon: MapPin },
 ];
 
 const supportItems = [
