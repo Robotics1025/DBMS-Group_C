@@ -18,9 +18,9 @@ import {
 
 const mainItems = [
   { title: "Dashboard", url: "/dashboard", icon: Home },
-  { title: "Bikes", url: "/bikes", icon: Bike },
-  { title: "Rentals", url: "/rentals", icon: Clock },
-  { title: "Customers", url: "/customers", icon: Users },
+  { title: "Bikes", url: "/dashboard/bikes", icon: Bike },
+  { title: "Rentals", url: "/dashboard/rentals", icon: Clock },
+  { title: "Customers", url: "/dashboard/customers", icon: Users },
   { title: "Analytics", url: "/analytics", icon: TrendingUp },
   { title: "Stations", url: "/stations", icon: MapPin },
 ];
