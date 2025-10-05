@@ -1,3 +1,6 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -6,66 +9,75 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Bike, MapPin, Search, Filter, Battery, Wrench, CheckCircle2 } from "lucide-react";
 import { AddBikeDialog } from "@/components/AddBikeDialog";
 
-const bikes = [
-  { id: "B-001", name: "Mountain Pro X1", type: "Mountain", status: "available", location: "Central Park", battery: 100 },
-  { id: "B-002", name: "City Cruiser", type: "City", status: "rented", location: "Downtown", battery: 85 },
-  { id: "B-003", name: "Electric Swift", type: "Electric", status: "available", location: "Riverside", battery: 92 },
-  { id: "B-004", name: "Hybrid Comfort", type: "Hybrid", status: "maintenance", location: "Workshop", battery: 0 },
-  { id: "B-005", name: "Road Racer Pro", type: "Road", status: "available", location: "Park Avenue", battery: 100 },
-  { id: "B-006", name: "Eco Rider", type: "Electric", status: "rented", location: "Beach Side", battery: 68 },
-  { id: "B-007", name: "Urban Explorer", type: "City", status: "available", location: "Central Park", battery: 100 },
-  { id: "B-008", name: "Trail Blazer", type: "Mountain", status: "available", location: "North Station", battery: 95 },
-];
+interface BikeType {
+  BikeID: number | string;
+  BikeSerialNumber: string;
+  Model: string;
+  BikeType: string;
+  CurrentStatus: string;
+  LastMaintenanceDate: string | null;
+  RentalRatePerMinute: number;
+  LocationID: number;
+  bike_image: string;
+  location_name: string;
+  location_address: string;
+  location_city: string;
+  location_phone: string;
+  battery?: number; // optional, default to 100
+}
 
 const getStatusConfig = (status: string) => {
-  switch (status) {
+  switch (status.toLowerCase()) {
     case "available":
-      return { 
-        variant: "default" as const, 
-        icon: CheckCircle2, 
-        label: "Available",
-        bgColor: "bg-success/10",
-        textColor: "text-success" 
-      };
+      return { variant: "default" as const, icon: CheckCircle2, label: "Available", bgColor: "bg-success/10", textColor: "text-success" };
     case "rented":
-      return { 
-        variant: "secondary" as const, 
-        icon: Bike, 
-        label: "Rented",
-        bgColor: "bg-primary/10",
-        textColor: "text-primary" 
-      };
+      return { variant: "secondary" as const, icon: Bike, label: "Rented", bgColor: "bg-primary/10", textColor: "text-primary" };
     case "maintenance":
-      return { 
-        variant: "destructive" as const, 
-        icon: Wrench, 
-        label: "Maintenance",
-        bgColor: "bg-destructive/10",
-        textColor: "text-destructive" 
-      };
+      return { variant: "destructive" as const, icon: Wrench, label: "Maintenance", bgColor: "bg-destructive/10", textColor: "text-destructive" };
     default:
-      return { 
-        variant: "outline" as const, 
-        icon: Bike, 
-        label: status,
-        bgColor: "bg-muted",
-        textColor: "text-muted-foreground" 
-      };
+      return { variant: "outline" as const, icon: Bike, label: status, bgColor: "bg-muted", textColor: "text-muted-foreground" };
   }
 };
 
 const getBikeTypeIcon = (type: string) => {
-  switch (type) {
-    case "Mountain": return "🏔️";
-    case "City": return "🏙️";
-    case "Electric": return "⚡";
-    case "Road": return "🏁";
-    case "Hybrid": return "🔄";
+  switch (type.toLowerCase()) {
+    case "mountain": return "🏔️";
+    case "city": return "🏙️";
+    case "electric": return "⚡";
+    case "road": return "🏁";
+    case "hybrid": return "🔄";
     default: return "🚲";
   }
 };
 
 export default function Bikes() {
+  const [bikes, setBikes] = useState<BikeType[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchBikes() {
+      try {
+        const res = await fetch("/api/bike_all");
+        if (!res.ok) throw new Error("Failed to fetch bikes");
+        const data = await res.json();
+        if (data.success) {
+          // Default battery to 100 if missing
+          const bikesWithBattery = data.bikes.map((b: BikeType) => ({ ...b, battery: b.battery ?? 100 }));
+          setBikes(bikesWithBattery);
+        } else {
+          console.error("API Error:", data.error);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchBikes();
+  }, []);
+
+  if (loading) return <div className="text-center py-10">Loading bikes...</div>;
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -88,7 +100,9 @@ export default function Bikes() {
             <CardTitle className="text-sm font-medium text-muted-foreground">Available</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-success">64</div>
+            <div className="text-3xl font-bold text-success">
+              {bikes.filter(b => b.CurrentStatus.toLowerCase() === "available").length}
+            </div>
             <p className="text-xs text-muted-foreground mt-1">Ready to rent</p>
           </CardContent>
         </Card>
@@ -97,7 +111,9 @@ export default function Bikes() {
             <CardTitle className="text-sm font-medium text-muted-foreground">Rented</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-primary">48</div>
+            <div className="text-3xl font-bold text-primary">
+              {bikes.filter(b => b.CurrentStatus.toLowerCase() === "rented").length}
+            </div>
             <p className="text-xs text-muted-foreground mt-1">Currently in use</p>
           </CardContent>
         </Card>
@@ -106,7 +122,9 @@ export default function Bikes() {
             <CardTitle className="text-sm font-medium text-muted-foreground">Maintenance</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-warning">8</div>
+            <div className="text-3xl font-bold text-warning">
+              {bikes.filter(b => b.CurrentStatus.toLowerCase() === "maintenance").length}
+            </div>
             <p className="text-xs text-muted-foreground mt-1">Under service</p>
           </CardContent>
         </Card>
@@ -115,7 +133,7 @@ export default function Bikes() {
             <CardTitle className="text-sm font-medium text-muted-foreground">Total Fleet</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-accent">156</div>
+            <div className="text-3xl font-bold text-accent">{bikes.length}</div>
             <p className="text-xs text-muted-foreground mt-1">All bikes</p>
           </CardContent>
         </Card>
@@ -163,13 +181,13 @@ export default function Bikes() {
       {/* Bikes Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {bikes.map((bike) => {
-          const statusConfig = getStatusConfig(bike.status);
+          const statusConfig = getStatusConfig(bike.CurrentStatus);
           const StatusIcon = statusConfig.icon;
-          const typeIcon = getBikeTypeIcon(bike.type);
-          
+          const typeIcon = getBikeTypeIcon(bike.BikeType);
+
           return (
             <Card 
-              key={bike.id} 
+              key={bike.BikeID} 
               className="hover:shadow-elevated transition-all duration-300 group border-0 bg-gradient-to-br from-card to-card/50 relative overflow-hidden"
             >
               <div className="absolute top-0 right-0 w-32 h-32 opacity-5 transition-opacity group-hover:opacity-10" 
@@ -182,8 +200,8 @@ export default function Bikes() {
                       {typeIcon}
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground">{bike.id}</p>
-                      <h3 className="font-semibold text-base mt-1">{bike.name}</h3>
+                      <p className="text-xs text-muted-foreground">{bike.BikeSerialNumber}</p>
+                      <h3 className="font-semibold text-base mt-1">{bike.Model}</h3>
                     </div>
                   </div>
                 </div>
@@ -194,15 +212,15 @@ export default function Bikes() {
                     <StatusIcon className="h-3 w-3" />
                     {statusConfig.label}
                   </Badge>
-                  <span className="text-sm font-medium text-muted-foreground">{bike.type}</span>
+                  <span className="text-sm font-medium text-muted-foreground">{bike.BikeType}</span>
                 </div>
                 
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <MapPin className="h-4 w-4 flex-shrink-0" />
-                  <span className="truncate">{bike.location}</span>
+                  <span className="truncate">{bike.location_name}</span>
                 </div>
 
-                {bike.battery > 0 && (
+                {bike.battery && (
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-muted-foreground flex items-center gap-1">
@@ -213,9 +231,7 @@ export default function Bikes() {
                     </div>
                     <div className="h-2 bg-secondary rounded-full overflow-hidden">
                       <div 
-                        className={`h-full rounded-full transition-all ${
-                          bike.battery > 70 ? 'bg-success' : bike.battery > 30 ? 'bg-warning' : 'bg-destructive'
-                        }`}
+                        className={`h-full rounded-full transition-all ${bike.battery > 70 ? 'bg-success' : bike.battery > 30 ? 'bg-warning' : 'bg-destructive'}`}
                         style={{ width: `${bike.battery}%` }}
                       />
                     </div>
@@ -223,11 +239,11 @@ export default function Bikes() {
                 )}
 
                 <Button 
-                  variant={bike.status === "available" ? "default" : "outline"} 
+                  variant={bike.CurrentStatus.toLowerCase() === "available" ? "default" : "outline"} 
                   className="w-full"
                   size="sm"
                 >
-                  {bike.status === "available" ? "Rent Out" : "View Details"}
+                  {bike.CurrentStatus.toLowerCase() === "available" ? "Rent Out" : "View Details"}
                 </Button>
               </CardContent>
             </Card>

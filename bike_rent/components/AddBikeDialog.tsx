@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,11 +12,28 @@ import { toast, Toaster } from "sonner";
 export function AddBikeDialog() {
   const [open, setOpen] = useState(false);
   const [previewSrc, setPreviewSrc] = useState("");
+  const [locations, setLocations] = useState<{ id: number; name: string }[]>([]);
+
+  useEffect(() => {
+    async function fetchLocations() {
+      try {
+        const res = await fetch("/api/location");
+        if (!res.ok) throw new Error("Failed to fetch locations");
+        const data = await res.json();
+        if (data.success) setLocations(data.locations);
+        else toast.error("Failed to load locations");
+      } catch (err) {
+        console.error(err);
+        toast.error("Error fetching locations");
+      }
+    }
+    fetchLocations();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-
+    const form = e.currentTarget; // capture the form reference immediately
+    const formData = new FormData(form);
     const file = formData.get("bike_image") as File | null;
 
     // Client-side validation
@@ -37,46 +54,26 @@ export function AddBikeDialog() {
         body: formData,
       });
 
-      if (!response.ok) throw new Error("Failed to add bike");
+      const data = await response.json();
 
-      toast.success(`${formData.get("Model")} has been added to the fleet!`, {
+      // Handle API errors properly
+      if (!response.ok || data.error) {
+        toast.error(data.error || "Failed to add bike. Try again.", { duration: 5000 });
+        return;
+      }
+
+      toast.success(`${formData.get("Model")} has been added!`, {
         description: "Bike added successfully",
         duration: 5000,
       });
 
-      // Reset form and preview
-      e.currentTarget.reset();
+      form.reset(); // safe reset
       setPreviewSrc("");
       setOpen(false);
     } catch (err) {
-      toast.error("Failed to add bike. Try again.", { duration: 5000 });
       console.error(err);
+      toast.error("Failed to add bike. Try again.", { duration: 5000 });
     }
-  };
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Validate
-    if (!file.type.startsWith("image/")) {
-      toast.error("Invalid file type. Please select an image.", { duration: 5000 });
-      e.target.value = "";
-      setPreviewSrc("");
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image is too large. Max size is 5MB.", { duration: 5000 });
-      e.target.value = "";
-      setPreviewSrc("");
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      setPreviewSrc(reader.result as string);
-    };
-    reader.readAsDataURL(file);
   };
 
   return (
@@ -157,7 +154,7 @@ export function AddBikeDialog() {
               </div>
             </div>
 
-            {/* Last Maintenance Date and Rental Rate in UGX */}
+            {/* Last Maintenance Date and Rental Rate */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="lastMaintenance">Last Maintenance Date</Label>
@@ -165,83 +162,69 @@ export function AddBikeDialog() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="rate" className="flex items-center gap-2">
-                  Rental Rate (per minute in UGX) *
-                </Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">UGX</span>
-                  <Input
-                    id="rate"
-                    name="RentalRatePerMinute"
-                    type="number"
-                    step="100"
-                    placeholder="500"
-                    className="h-11 pl-10"
-                    required
-                  />
-                </div>
+                <Label htmlFor="rate">Rental Rate (per minute in UGX) *</Label>
+                <Input id="rate" name="RentalRatePerMinute" type="number" step="0.01" placeholder="500" className="h-11" required />
               </div>
             </div>
 
-            {/* Location and Bike Image */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="location" className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4" />
-                  Location *
-                </Label>
-                <Select name="LocationID" required>
-                  <SelectTrigger className="h-11">
-                    <SelectValue placeholder="Select location" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">Central Park Station</SelectItem>
-                    <SelectItem value="2">Downtown Hub</SelectItem>
-                    <SelectItem value="3">Riverside Point</SelectItem>
-                    <SelectItem value="4">Park Avenue</SelectItem>
-                    <SelectItem value="5">North Station</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            {/* Location Selection */}
+            <div className="space-y-2">
+              <Label htmlFor="location" className="flex items-center gap-2">
+                <MapPin className="h-4 w-4" />
+                Location *
+              </Label>
+              <Select name="LocationID" required>
+                <SelectTrigger className="h-11">
+                  <SelectValue placeholder="Select location" />
+                </SelectTrigger>
+                <SelectContent>
+                  {locations.map((loc) => (
+                    <SelectItem key={loc.id} value={loc.id.toString()}>
+                      {loc.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="bikeImage">Bike Image</Label>
-                <Input
-                  id="bikeImage"
-                  name="bike_image"
-                  type="file"
-                  accept="image/*"
-                  className="h-11"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
+            {/* Bike Image */}
+            <div className="space-y-2">
+              <Label htmlFor="bikeImage">Bike Image</Label>
+              <Input
+                id="bikeImage"
+                name="bike_image"
+                type="file"
+                accept="image/*"
+                className="h-11"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
 
-                    if (!file.type.startsWith("image/")) {
-                      toast.error("Invalid file type. Please select an image.", { duration: 5000 });
-                      e.target.value = "";
-                      setPreviewSrc("");
-                      return;
-                    }
-                    if (file.size > 5 * 1024 * 1024) {
-                      toast.error("Image is too large. Max size is 5MB.", { duration: 5000 });
-                      e.target.value = "";
-                      setPreviewSrc("");
-                      return;
-                    }
+                  if (!file.type.startsWith("image/")) {
+                    toast.error("Invalid file type. Please select an image.", { duration: 5000 });
+                    e.target.value = "";
+                    setPreviewSrc("");
+                    return;
+                  }
+                  if (file.size > 5 * 1024 * 1024) {
+                    toast.error("Image is too large. Max size is 5MB.", { duration: 5000 });
+                    e.target.value = "";
+                    setPreviewSrc("");
+                    return;
+                  }
 
-                    const reader = new FileReader();
-                    reader.onload = () => setPreviewSrc(reader.result as string);
-                    reader.readAsDataURL(file);
-                  }}
+                  const reader = new FileReader();
+                  reader.onload = () => setPreviewSrc(reader.result as string);
+                  reader.readAsDataURL(file);
+                }}
+              />
+              {previewSrc && (
+                <img
+                  src={previewSrc}
+                  className="mt-2 h-40 w-40 object-cover rounded border shadow-sm"
+                  alt="Bike Preview"
                 />
-                {previewSrc && (
-                  <img
-                    src={previewSrc}
-                    className="mt-2 h-40 w-40 object-cover rounded border shadow-sm"
-                    alt="Bike Preview"
-                  />
-                )}
-              </div>
+              )}
             </div>
 
             {/* Buttons */}
