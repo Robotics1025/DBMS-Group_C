@@ -12,31 +12,63 @@ import { toast, Toaster } from "sonner";
 export function AddBikeDialog() {
   const [open, setOpen] = useState(false);
   const [previewSrc, setPreviewSrc] = useState("");
-  const [locations, setLocations] = useState<{ id: number; name: string }[]>([]);
+  const [locations, setLocations] = useState<{ id: string; name: string }[]>([]);
+  const [loadingLocations, setLoadingLocations] = useState(true);
 
-  useEffect(() => {
-    async function fetchLocations() {
-      try {
-        const res = await fetch("/api/location");
-        if (!res.ok) throw new Error("Failed to fetch locations");
-        const data = await res.json();
-        if (data.success) setLocations(data.locations);
-        else toast.error("Failed to load locations");
-      } catch (err) {
-        console.error(err);
-        toast.error("Error fetching locations");
+  interface Bike {
+  id: string;
+  serial: string;
+  name: string;
+  type: string;
+  status: string;
+  lastMaintenance: string | null;
+  rate: string;
+  locationId: string;
+  locationName: string;
+  image: string;
+}
+
+interface BikesApiResponse {
+  success: boolean;
+  bikes: Bike[];
+}
+
+useEffect(() => {
+  async function fetchLocations() {
+    try {
+      const res = await fetch("/api/bikes");
+      if (!res.ok) throw new Error("Failed to fetch bikes");
+
+      const data: BikesApiResponse = await res.json(); // <- type assertion
+
+      if (data.success && data.bikes) {
+        const uniqueLocations = Array.from(
+          new Map(
+            data.bikes.map((b) => [b.locationId, { id: b.locationId, name: b.locationName }])
+          ).values()
+        );
+
+        setLocations(uniqueLocations);
+      } else {
+        toast.error("Failed to load locations");
       }
+    } catch (err) {
+      console.error(err);
+      toast.error("Error fetching locations");
+    } finally {
+      setLoadingLocations(false);
     }
-    fetchLocations();
-  }, []);
+  }
+
+  fetchLocations();
+}, []);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const form = e.currentTarget; // capture the form reference immediately
+    const form = e.currentTarget;
     const formData = new FormData(form);
     const file = formData.get("bike_image") as File | null;
 
-    // Client-side validation
     if (file) {
       if (!file.type.startsWith("image/")) {
         toast.error("Invalid file type. Please select an image.", { duration: 5000 });
@@ -53,10 +85,8 @@ export function AddBikeDialog() {
         method: "POST",
         body: formData,
       });
-
       const data = await response.json();
 
-      // Handle API errors properly
       if (!response.ok || data.error) {
         toast.error(data.error || "Failed to add bike. Try again.", { duration: 5000 });
         return;
@@ -67,7 +97,7 @@ export function AddBikeDialog() {
         duration: 5000,
       });
 
-      form.reset(); // safe reset
+      form.reset();
       setPreviewSrc("");
       setOpen(false);
     } catch (err) {
@@ -79,7 +109,6 @@ export function AddBikeDialog() {
   return (
     <>
       <Toaster richColors />
-
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
           <Button className="gap-2 bg-gradient-to-r from-primary to-accent shadow-lg hover:shadow-xl transition-all">
@@ -111,7 +140,6 @@ export function AddBikeDialog() {
                 </Label>
                 <Input id="serial" name="BikeSerialNumber" placeholder="e.g., B-2024-001" className="h-11" required />
               </div>
-
               <div className="space-y-2">
                 <Label htmlFor="model" className="flex items-center gap-2">
                   <Bike className="h-4 w-4" />
@@ -138,7 +166,6 @@ export function AddBikeDialog() {
                   </SelectContent>
                 </Select>
               </div>
-
               <div className="space-y-2">
                 <Label htmlFor="status">Current Status *</Label>
                 <Select name="CurrentStatus" required>
@@ -160,7 +187,6 @@ export function AddBikeDialog() {
                 <Label htmlFor="lastMaintenance">Last Maintenance Date</Label>
                 <Input id="lastMaintenance" name="LastMaintenanceDate" type="date" className="h-11" />
               </div>
-
               <div className="space-y-2">
                 <Label htmlFor="rate">Rental Rate (per minute in UGX) *</Label>
                 <Input id="rate" name="RentalRatePerMinute" type="number" step="0.01" placeholder="500" className="h-11" required />
@@ -175,14 +201,20 @@ export function AddBikeDialog() {
               </Label>
               <Select name="LocationID" required>
                 <SelectTrigger className="h-11">
-                  <SelectValue placeholder="Select location" />
+                  <SelectValue placeholder={loadingLocations ? "Loading locations..." : "Select location"} />
                 </SelectTrigger>
                 <SelectContent>
-                  {locations.map((loc) => (
-                    <SelectItem key={loc.id} value={loc.id.toString()}>
-                      {loc.name}
-                    </SelectItem>
-                  ))}
+                  {loadingLocations ? (
+                    <SelectItem value="" disabled>Loading locations...</SelectItem>
+                  ) : locations.length > 0 ? (
+                    locations.map((loc) => (
+                      <SelectItem key={loc.id} value={loc.id.toString()}>
+                        {loc.name}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="" disabled>No locations available</SelectItem>
+                  )}
                 </SelectContent>
               </Select>
             </div>
