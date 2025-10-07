@@ -15,6 +15,7 @@ const prisma = new PrismaClient()
 //Add explicit return type
 export async function GET() {
   try {
+    // Fetch all properties with related units
     const properties = await prisma.properties.findMany({
       include: { property_units: true },
     })
