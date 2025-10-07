@@ -1,3 +1,4 @@
+
 // app/api/dashboard/route.ts
 //Add NextResponse and Prisma imports
 import { NextResponse } from "next/server"
@@ -5,6 +6,11 @@ import { PrismaClient } from "@/app/generated/prisma" // Import the class
 
 //Instantiate PrismaClient
 const prisma = new PrismaClient() 
+//  Add documentation for API route
+/**
+ * GET /api/dashboard
+ * Returns all data needed for the dashboard view
+ */
 
 export async function GET() {
   try {
