@@ -3,7 +3,8 @@
 import { NextResponse } from "next/server"
 import { PrismaClient } from "@/app/generated/prisma" // Import the class
 
-const prisma = new PrismaClient() // Instantiate PrismaClient
+//Instantiate PrismaClient
+const prisma = new PrismaClient() 
 
 export async function GET() {
   try {
