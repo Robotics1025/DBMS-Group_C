@@ -29,6 +29,7 @@ export async function GET() {
     const leases = await prisma.leases.findMany({
       include: { tenants: true, property_units: true },
     })
+    //Fetch rent_schedules with lease relations
     const rentSchedules = await prisma.rent_schedules.findMany({
       include: { leases: true },
     })
