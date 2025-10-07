@@ -45,6 +45,11 @@ export async function GET() {
         tenants,
         leases,
         rentSchedules,
+        }),
+      {
+        headers: { "Cache-Control": "no-store" },
+      }
+    )
 
     return NextResponse.json({ properties, units, tenants, leases, rentSchedules })
   } catch (error) {
