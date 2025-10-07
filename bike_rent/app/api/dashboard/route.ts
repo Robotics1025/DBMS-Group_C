@@ -12,6 +12,7 @@ const prisma = new PrismaClient()
  * Returns all data needed for the dashboard view
  */
 
+//Add explicit return type
 export async function GET() {
   try {
     const properties = await prisma.properties.findMany({
