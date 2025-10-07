@@ -40,6 +40,11 @@ export async function GET() {
     //Add caching header to response
     return new NextResponse(
       JSON.stringify({
+         properties,
+        propertyUnits,
+        tenants,
+        leases,
+        rentSchedules,
 
     return NextResponse.json({ properties, units, tenants, leases, rentSchedules })
   } catch (error) {
