@@ -1,4 +1,5 @@
 // app/api/dashboard/route.ts
+//Add NextResponse and Prisma imports
 import { NextResponse } from "next/server"
 import { PrismaClient } from "@/app/generated/prisma" // Import the class
 
