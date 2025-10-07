@@ -50,6 +50,9 @@ export async function GET() {
         headers: { "Cache-Control": "no-store" },
       }
     )
+     } catch (error) {
+   
+    console.error("Dashboard API error:", error)
 
     return NextResponse.json({ properties, units, tenants, leases, rentSchedules })
   } catch (error) {
