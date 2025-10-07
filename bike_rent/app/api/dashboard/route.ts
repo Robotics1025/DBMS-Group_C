@@ -19,6 +19,7 @@ export async function GET() {
     const properties = await prisma.properties.findMany({
       include: { property_units: true },
     })
+    //Fetch all property units
     const units = await prisma.property_units.findMany()
     const tenants = await prisma.tenants.findMany()
     const leases = await prisma.leases.findMany({
