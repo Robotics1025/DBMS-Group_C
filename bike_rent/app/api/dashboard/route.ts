@@ -58,6 +58,7 @@ export async function GET() {
     return NextResponse.json({ properties, units, tenants, leases, rentSchedules })
   } catch (error) {
     console.error("Dashboard API error:", error)
+  // Improve error message clarity
     return NextResponse.json(
       { error: "Failed to fetch dashboard data" },
       { status: 500 }
