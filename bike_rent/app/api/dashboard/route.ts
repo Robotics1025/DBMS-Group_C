@@ -51,7 +51,7 @@ export async function GET() {
       }
     )
      } catch (error) {
-   
+   // Add reusable error handler function
     console.error("Dashboard API error:", error)
 
     return NextResponse.json({ properties, units, tenants, leases, rentSchedules })
