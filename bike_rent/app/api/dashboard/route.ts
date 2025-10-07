@@ -38,6 +38,8 @@ export async function GET() {
     console.log(`Dashboard data fetched in ${duration}ms`)
     
     //Add caching header to response
+    return new NextResponse(
+      JSON.stringify({
 
     return NextResponse.json({ properties, units, tenants, leases, rentSchedules })
   } catch (error) {
