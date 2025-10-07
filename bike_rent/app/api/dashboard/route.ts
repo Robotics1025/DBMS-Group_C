@@ -35,6 +35,7 @@ export async function GET() {
     })
     // Log how long the request took
     const duration = Date.now() - startTime
+    console.log(`Dashboard data fetched in ${duration}ms`)
 
     return NextResponse.json({ properties, units, tenants, leases, rentSchedules })
   } catch (error) {
