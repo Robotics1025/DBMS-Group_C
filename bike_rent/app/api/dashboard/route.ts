@@ -34,6 +34,7 @@ export async function GET() {
       include: { leases: true },
     })
     // Log how long the request took
+    const duration = Date.now() - startTime
 
     return NextResponse.json({ properties, units, tenants, leases, rentSchedules })
   } catch (error) {
