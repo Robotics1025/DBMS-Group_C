@@ -33,6 +33,7 @@ export async function GET() {
     const rentSchedules = await prisma.rent_schedules.findMany({
       include: { leases: true },
     })
+    // Log how long the request took
 
     return NextResponse.json({ properties, units, tenants, leases, rentSchedules })
   } catch (error) {
