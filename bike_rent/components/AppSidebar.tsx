@@ -20,7 +20,7 @@ const mainItems = [
   { title: "Dashboard", url: "/dashboard", icon: Home },
   { title: "Bikes", url: "/dashboard/bikes", icon: Bike },
   { title: "Rentals", url: "/dashboard/rentals", icon: Clock },
-  { title: "Customers", url: "/dashboard/customers", icon: Users },
+  { title: "Stuff", url: "/dashboard/stuff", icon: Users },
   { title: "Analytics", url: "/analytics", icon: TrendingUp },
   { title: "Stations", url: "/dashboard/stations", icon: MapPin },
 ];

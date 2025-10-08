@@ -26,3 +26,4 @@ export const getBikeByStatusAndSearch = `
   JOIN Location l ON b.LocationID = l.LocationID
   WHERE b.CurrentStatus = ? AND b.Model LIKE ?;
 `;
+  
