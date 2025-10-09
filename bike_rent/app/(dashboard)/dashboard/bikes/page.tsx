@@ -58,6 +58,15 @@ export default function Bikes() {
   const [typeFilter, setTypeFilter] = useState<string>("all-types");
   const [searchTerm, setSearchTerm] = useState<string>("");
 
+  // Read search query from URL on component mount
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const searchParam = urlParams.get('search');
+    if (searchParam) {
+      setSearchTerm(searchParam);
+    }
+  }, []);
+
   const fetchBikes = async () => {
     try {
       setLoading(true);

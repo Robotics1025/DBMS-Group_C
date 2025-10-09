@@ -205,7 +205,7 @@ useEffect(() => {
                 </SelectTrigger>
                 <SelectContent>
                   {loadingLocations ? (
-                    <SelectItem value="" disabled>Loading locations...</SelectItem>
+                    <SelectItem value="loading" disabled>Loading locations...</SelectItem>
                   ) : locations.length > 0 ? (
                     locations.map((loc) => (
                       <SelectItem key={loc.id} value={loc.id.toString()}>
@@ -213,7 +213,7 @@ useEffect(() => {
                       </SelectItem>
                     ))
                   ) : (
-                    <SelectItem value="" disabled>No locations available</SelectItem>
+                    <SelectItem value="no-locations" disabled>No locations available</SelectItem>
                   )}
                 </SelectContent>
               </Select>

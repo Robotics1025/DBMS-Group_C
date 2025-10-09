@@ -4,7 +4,8 @@ import { PrismaClient } from '@/app/generated/prisma';
 import { 
   rentalQueries, 
   bikeQueries, 
-  paymentQueries, 
+  paymentQueries,
+  userQueries,
   executeQuery, 
   executeInsertQuery 
 } from '@/lib/queries';
@@ -74,16 +75,13 @@ export async function POST(request: NextRequest) {
       ['Rented', bikeId]
     );
 
-    // Calculate cost
-    const costResult = await executeQuery(
-      prisma,
-      rentalQueries.calculateRentalCost,
-      [rentalStart, expectedReturn, rentalStart, expectedReturn, promoId, bikeId]
-    );
-
+    // Calculate cost manually since we don't have a dedicated query
+    // Get bike info first to get rental rate (reuse previous bikeResult)
     let totalCost = 0;
-    if (costResult.success && costResult.data && costResult.data.length > 0) {
-      totalCost = parseFloat(costResult.data[0].TotalCost);
+    if (bikeResult.success && bikeResult.data && bikeResult.data.length > 0) {
+      const bike = bikeResult.data[0];
+      const rentalHours = Math.ceil((expectedReturn.getTime() - rentalStart.getTime()) / (1000 * 60 * 60));
+      totalCost = parseFloat(bike.RentalRatePerMinute) * rentalHours * 60; // Convert to hours
     }
 
     return NextResponse.json({

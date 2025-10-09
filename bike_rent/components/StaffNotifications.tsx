@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Bell, Clock, User, Bike, MapPin, Phone, AlertCircle, CheckCircle, X, Refresh } from 'lucide-react';
+import { Bell, Clock, User, Bike, MapPin, Phone, AlertCircle, CheckCircle, X, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -90,7 +90,7 @@ export function StaffNotifications() {
             disabled={isLoading}
             className="h-8 w-8"
           >
-            <Refresh className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
           </Button>
         </CardTitle>
         <p className="text-xs text-gray-500">

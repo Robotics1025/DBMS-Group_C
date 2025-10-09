@@ -1,7 +1,7 @@
 // Example API route using the centralized queries
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@/app/generated/prisma';
-import { bikeQueries, executeQuery } from '@/lib/queries';
+import { bikeQueries, executeQuery, executeInsertQuery } from '@/lib/queries';
 
 const prisma = new PrismaClient();
 
@@ -14,12 +14,15 @@ export async function GET(request: NextRequest) {
     let result;
 
     if (bikeType || locationId) {
-      // Use search query with filters
-      result = await executeQuery(
-        prisma, 
-        bikeQueries.searchBikes, 
-        [bikeType, bikeType, locationId, locationId]
-      );
+      // Get all bikes and filter in code since we don't have specific search queries
+      result = await executeQuery(prisma, bikeQueries.getAllBikes);
+      if (result.success && result.data) {
+        result.data = result.data.filter((bike: any) => {
+          const matchesType = !bikeType || bike.BikeType === bikeType;
+          const matchesLocation = !locationId || bike.LocationID === parseInt(locationId);
+          return matchesType && matchesLocation;
+        });
+      }
     } else {
       // Get all available bikes
       result = await executeQuery(prisma, bikeQueries.getAvailableBikes);
@@ -63,7 +66,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Add new bike using centralized query
-    const result = await executeQuery(
+    const result = await executeInsertQuery(
       prisma,
       bikeQueries.addBike,
       [bikeSerialNumber, model, bikeType, rentalRatePerMinute, locationId]

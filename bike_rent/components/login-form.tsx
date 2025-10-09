@@ -77,18 +77,6 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
     notify.warning("Coming soon", `${provider} login is not implemented yet.`)
   }
 
-  // Demo credentials for easy testing
-  const demoCredentials = [
-    { email: "admin@bikerent.com", password: "admin123", role: "Admin", color: "text-red-600" },
-    { email: "staff@bikerent.com", password: "staff123", role: "Staff", color: "text-green-600" },
-    { email: "customer@bikerent.com", password: "customer123", role: "Customer", color: "text-blue-600" }
-  ]
-
-  const handleDemoLogin = (demoEmail: string, demoPassword: string) => {
-    setEmail(demoEmail)
-    setPassword(demoPassword)
-  }
-
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card className="overflow-hidden p-0">
@@ -100,31 +88,6 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
               <p className="text-muted-foreground text-balance">
                 Login to your Bike Rental System
               </p>
-            </div>
-
-            {/* Demo Credentials */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h3 className="text-sm font-medium text-blue-800 mb-2 flex items-center">
-                <Users className="h-4 w-4 mr-1" />
-                Demo Accounts
-              </h3>
-              <div className="space-y-2">
-                {demoCredentials.map((demo) => (
-                  <button
-                    key={demo.email}
-                    type="button"
-                    className="w-full text-left p-2 bg-white rounded border hover:bg-gray-50 transition-colors"
-                    onClick={() => handleDemoLogin(demo.email, demo.password)}
-                    disabled={loading}
-                  >
-                    <div className="text-xs">
-                      <div className={`font-medium ${demo.color}`}>{demo.role}</div>
-                      <div className="text-gray-600">{demo.email}</div>
-                      <div className="text-gray-500">Password: {demo.password}</div>
-                    </div>
-                  </button>
-                ))}
-              </div>
             </div>
 
             {/* Email */}

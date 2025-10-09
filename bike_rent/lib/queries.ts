@@ -512,16 +512,24 @@ export const executeQuery = async (
   params: QueryParams = []
 ): Promise<QueryResult> => {
   try {
-    // Replace ? placeholders with $1, $2, etc. for Prisma raw queries
-    let paramIndex = 1;
-    const processedQuery = query.replace(/\?/g, () => `$${paramIndex++}`);
+    // Use MySQL-style ? placeholders directly with Prisma
+    const result = await prisma.$queryRawUnsafe(query, ...params);
     
-    const result = await prisma.$queryRawUnsafe(processedQuery, ...params);
+    // Convert BigInt values to regular numbers for JSON serialization
+    const serializedResult = Array.isArray(result) 
+      ? result.map(row => {
+          const serialized: any = {};
+          for (const [key, value] of Object.entries(row as any)) {
+            serialized[key] = typeof value === 'bigint' ? Number(value) : value;
+          }
+          return serialized;
+        })
+      : result;
     
     return {
       success: true,
-      data: result,
-      rowCount: Array.isArray(result) ? result.length : 1
+      data: serializedResult,
+      rowCount: Array.isArray(serializedResult) ? serializedResult.length : 1
     };
   } catch (error) {
     console.error('Query execution error:', error);
@@ -541,16 +549,17 @@ export const executeInsertQuery = async (
   params: QueryParams = []
 ): Promise<QueryResult & { insertId?: number }> => {
   try {
-    let paramIndex = 1;
-    const processedQuery = query.replace(/\?/g, () => `$${paramIndex++}`);
-    
-    const result = await prisma.$executeRawUnsafe(processedQuery, ...params);
+    // Use MySQL-style ? placeholders directly with Prisma
+    const result = await prisma.$executeRawUnsafe(query, ...params);
     
     // For INSERT queries, get the last inserted ID
     const lastInsertResult = await prisma.$queryRawUnsafe('SELECT LAST_INSERT_ID() as insertId');
-    const insertId = Array.isArray(lastInsertResult) && lastInsertResult[0] 
-      ? Number(lastInsertResult[0].insertId) 
+    const rawInsertId = Array.isArray(lastInsertResult) && lastInsertResult[0] 
+      ? lastInsertResult[0].insertId 
       : undefined;
+    
+    // Convert BigInt insertId to number
+    const insertId = typeof rawInsertId === 'bigint' ? Number(rawInsertId) : rawInsertId;
     
     return {
       success: true,

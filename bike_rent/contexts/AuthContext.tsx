@@ -27,64 +27,50 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock users for different roles
-const mockUsers: Record<string, User> = {
-  'admin@bikerent.com': {
-    id: '1',
-    name: 'Admin User',
-    email: 'admin@bikerent.com',
-    phone: '+1-555-0001',
-    role: 'admin',
-    avatar: '/assets/images/avatar/admin-avatar.webp',
-    createdAt: '2023-01-01',
-    isActive: true
-  },
-  'staff@bikerent.com': {
-    id: '2',
-    name: 'Staff Member',
-    email: 'staff@bikerent.com',
-    phone: '+1-555-0002',
-    role: 'staff',
-    avatar: '/assets/images/avatar/staff-avatar.webp',
-    createdAt: '2023-02-01',
-    isActive: true
-  },
-  'customer@bikerent.com': {
-    id: '3',
-    name: 'John Customer',
-    email: 'customer@bikerent.com',
-    phone: '+1-555-0003',
-    role: 'customer',
-    avatar: '/assets/images/avatar/customer-avatar.webp',
-    createdAt: '2023-03-01',
-    isActive: true
-  }
-};
+// Real authentication using API - no mock data needed
 
-// Mock passwords (in real app, this would be handled by backend)
-const mockPasswords: Record<string, string> = {
-  'admin@bikerent.com': 'admin123',
-  'staff@bikerent.com': 'staff123',
-  'customer@bikerent.com': 'customer123'
-};
+// Helper function to normalize role names from database
+function normalizeRole(role: string): UserRole {
+  const normalizedRole = role.toLowerCase().trim();
+  switch (normalizedRole) {
+    case 'administrator':
+    case 'admin':
+      return 'admin';
+    case 'staff':
+    case 'employee':
+      return 'staff';
+    case 'customer':
+    case 'user':
+    default:
+      return 'customer';
+  }
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load user from localStorage on mount
+  // Load user from localStorage and validate session on mount
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      try {
-        const userData = JSON.parse(storedUser);
-        setUser(userData);
-      } catch (error) {
-        console.error('Error parsing stored user:', error);
-        localStorage.removeItem('user');
+    const validateSession = async () => {
+      const storedUser = localStorage.getItem('user');
+      const sessionId = localStorage.getItem('sessionId');
+      
+      if (storedUser && sessionId) {
+        try {
+          const userData = JSON.parse(storedUser);
+          // Optionally validate session with server here
+          setUser(userData);
+        } catch (error) {
+          console.error('Error parsing stored user:', error);
+          localStorage.removeItem('user');
+          localStorage.removeItem('sessionId');
+        }
       }
-    }
-    setIsLoading(false);
+      setIsLoading(false);
+    };
+
+    validateSession();
   }, []);
 
   // Save user to localStorage whenever user changes
@@ -99,35 +85,79 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string): Promise<{ success: boolean; message?: string; user?: User }> => {
     setIsLoading(true);
     
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ Email: email, Password: password }),
+      });
 
-    const user = mockUsers[email.toLowerCase()];
-    const expectedPassword = mockPasswords[email.toLowerCase()];
+      const data = await response.json();
 
-    if (!user) {
+      if (!response.ok) {
+        setIsLoading(false);
+        return { success: false, message: data.error || 'Login failed' };
+      }
+
+      if (!data.success) {
+        setIsLoading(false);
+        return { success: false, message: data.error || 'Login failed' };
+      }
+
+      // Transform API response to match our User interface
+      const user: User = {
+        id: data.user.id.toString(),
+        name: data.user.name,
+        email: data.user.email,
+        phone: data.user.phoneNumber,
+        role: normalizeRole(data.user.role),
+        createdAt: new Date().toISOString(),
+        isActive: true
+      };
+
+      // Store session ID in localStorage for API calls
+      if (data.sessionId) {
+        localStorage.setItem('sessionId', data.sessionId);
+        // Set cookie for server-side authentication
+        document.cookie = `sessionId=${data.sessionId}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax`;
+      }
+
+      setUser(user);
       setIsLoading(false);
-      return { success: false, message: 'User not found' };
-    }
+      return { success: true, user };
 
-    if (password !== expectedPassword) {
+    } catch (error) {
+      console.error('Login error:', error);
       setIsLoading(false);
-      return { success: false, message: 'Invalid password' };
+      return { success: false, message: 'Network error. Please try again.' };
     }
-
-    if (!user.isActive) {
-      setIsLoading(false);
-      return { success: false, message: 'Account is deactivated' };
-    }
-
-    setUser(user);
-    setIsLoading(false);
-    return { success: true, user };
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('user');
+  const logout = async () => {
+    try {
+      // Call logout API to invalidate session
+      const sessionId = localStorage.getItem('sessionId');
+      if (sessionId) {
+        await fetch('/api/logout', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ sessionId }),
+        });
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      // Clear local state regardless of API call result
+      setUser(null);
+      localStorage.removeItem('user');
+      localStorage.removeItem('sessionId');
+      // Clear cookie
+      document.cookie = 'sessionId=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    }
   };
 
   const updateUser = (userData: Partial<User>) => {

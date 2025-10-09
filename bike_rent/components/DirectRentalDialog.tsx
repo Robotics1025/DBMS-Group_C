@@ -47,7 +47,7 @@ export function DirectRentalDialog({ bike, onRentalSuccess }: DirectRentalProps)
   const totalCost = baseCost + serviceFee;
 
   const handleDirectRental = async () => {
-    if (!user?.UserID) {
+    if (!user?.id) {
       addNotification({
         type: 'error',
         title: 'Authentication Required',
@@ -74,7 +74,7 @@ export function DirectRentalDialog({ bike, onRentalSuccess }: DirectRentalProps)
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          customerID: user.UserID,
+          customerID: parseInt(user.id),
           bikeID: bike.BikeID,
           expectedHours: rentalHours[0],
           promoID: null // Handle promo codes later
@@ -236,10 +236,10 @@ export function DirectRentalDialog({ bike, onRentalSuccess }: DirectRentalProps)
               Rental Details
             </div>
             <p className="text-sm text-blue-700">
-              <strong>Customer:</strong> {user.FirstName} {user.LastName}
+              <strong>Customer:</strong> {user.name}
             </p>
             <p className="text-sm text-blue-700">
-              <strong>Email:</strong> {user.Email}
+              <strong>Email:</strong> {user.email}
             </p>
           </div>
         )}

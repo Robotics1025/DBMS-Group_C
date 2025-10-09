@@ -1,47 +1,92 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Bike, Clock, DollarSign, TrendingUp, MapPin, Users } from "lucide-react";
 import Image from "next/image";
 
-const stats = [
-  {
-    title: "Total Bikes",
-    value: "156",
-    change: "12 available",
-    icon: Bike,
-    status: "success",
-  },
-  {
-    title: "Active Rentals",
-    value: "48",
-    change: "+8 today",
-    icon: Clock,
-    status: "warning",
-  },
-  {
-    title: "Revenue Today",
-    value: "$1,248",
-    change: "+18.2%",
-    icon: DollarSign,
-    status: "success",
-  },
-  {
-    title: "Total Customers",
-    value: "892",
-    change: "+24 this week",
-    icon: Users,
-    status: "default",
-  },
-];
-
-const recentRentals = [
-  { id: "R-001", customer: "Sarah Johnson", bike: "Mountain Pro X1", station: "Central Park", time: "10 mins ago", status: "active", avatar: "/assets/images/avatar/avatar-1.webp" },
-  { id: "R-002", customer: "Mike Chen", bike: "City Cruiser", station: "Downtown", time: "25 mins ago", status: "active", avatar: "/assets/images/avatar/avatar-2.webp" },
-  { id: "R-003", customer: "Emma Davi s", bike: "Electric Swift", station: "Riverside", time: "1 hour ago", status: "returned", avatar: "/assets/images/avatar/avatar-3.webp" },
-  { id: "R-004", customer: "James Wilson", bike: "Hybrid Comfort", station: "Park Avenue", time: "2 hours ago", status: "returned", avatar: "/assets/images/avatar/avatar-4.webp" },
-];
+interface DashboardStats {
+  totalBikes: number;
+  availableBikes: number;
+  activeRentals: number;
+  totalRevenue: number;
+  totalCustomers: number;
+}
 
 export default function Dashboard() {
+  const [stats, setStats] = useState<DashboardStats>({
+    totalBikes: 0,
+    availableBikes: 0,
+    activeRentals: 0,
+    totalRevenue: 0,
+    totalCustomers: 0,
+  });
+  const [loading, setLoading] = useState(true);
+  const [recentRentals, setRecentRentals] = useState<any[]>([]);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch dashboard data from new unified API
+      const dashboardResponse = await fetch('/api/dashboard');
+      if (dashboardResponse.ok) {
+        const dashboardData = await dashboardResponse.json();
+        if (dashboardData.success) {
+          const { bikes, users } = dashboardData.data;
+          
+          setStats({
+            totalBikes: bikes.total_bikes || 0,
+            availableBikes: bikes.available_bikes || 0,
+            activeRentals: bikes.rented_bikes || 0,
+            totalRevenue: 0, // TODO: Add revenue calculation
+            totalCustomers: users.customers || 0,
+          });
+        }
+      }
+      
+    } catch (error) {
+      console.error('Failed to fetch dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const dashboardStats = [
+    {
+      title: "Total Bikes",
+      value: loading ? "..." : stats.totalBikes.toString(),
+      change: `${stats.availableBikes} available`,
+      icon: Bike,
+      status: "success",
+    },
+    {
+      title: "Active Rentals",
+      value: loading ? "..." : stats.activeRentals.toString(),
+      change: "+0 today", // TODO: Calculate daily change
+      icon: Clock,
+      status: "warning",
+    },
+    {
+      title: "Revenue Today",
+      value: loading ? "..." : "$0", // TODO: Calculate from rental data
+      change: "+0%",
+      icon: DollarSign,
+      status: "success",
+    },
+    {
+      title: "Total Customers",
+      value: loading ? "..." : stats.totalCustomers.toString(),
+      change: "+0 this week", // TODO: Calculate weekly change
+      icon: Users,
+      status: "default",
+    },
+  ];
   return (
     <div className="space-y-6 relative min-h-screen">
       {/* Enhanced Background Pattern */}
@@ -141,7 +186,7 @@ export default function Dashboard() {
 
       {/* Stats Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat, index) => {
+        {dashboardStats.map((stat, index) => {
           const Icon = stat.icon;
           const cardColors = [
             {
@@ -247,46 +292,54 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent className="p-6">
             <div className="space-y-4">
-              {recentRentals.map((rental) => (
-                <div key={rental.id} className="flex items-center gap-4 p-3 rounded-lg hover:bg-muted/50 transition-colors border-b last:border-0">
-                  <div className="relative h-12 w-12 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-primary/20">
-                    <Image 
-                      src={rental.avatar} 
-                      alt={rental.customer}
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                  <div className="flex-1 space-y-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium leading-none truncate">
-                        {rental.customer}
-                      </p>
-                      <Badge 
-                        variant={rental.status === "active" ? "default" : "secondary"} 
-                        className={`text-xs ${
-                          rental.status === "active" 
-                            ? "bg-green-500/20 text-green-700 hover:bg-green-500/30" 
-                            : "bg-gray-500/20 text-gray-700"
-                        }`}
-                      >
-                        {rental.status}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Bike className="h-3 w-3" />
-                      <span className="truncate">{rental.bike}</span>
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded-full">
-                      <MapPin className="h-3 w-3" />
-                      <span className="hidden sm:inline">{rental.station}</span>
-                    </div>
-                    <span className="text-xs text-muted-foreground font-medium">{rental.time}</span>
-                  </div>
+              {recentRentals.length === 0 ? (
+                <div className="text-center py-8">
+                  <Clock className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+                  <h3 className="text-sm font-medium text-muted-foreground mb-2">No recent rentals</h3>
+                  <p className="text-xs text-muted-foreground">Recent bike rental activity will appear here</p>
                 </div>
-              ))}
+              ) : (
+                recentRentals.map((rental) => (
+                  <div key={rental.id} className="flex items-center gap-4 p-3 rounded-lg hover:bg-muted/50 transition-colors border-b last:border-0">
+                    <div className="relative h-12 w-12 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-primary/20">
+                      <Image 
+                        src={rental.avatar} 
+                        alt={rental.customer}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                    <div className="flex-1 space-y-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium leading-none truncate">
+                          {rental.customer}
+                        </p>
+                        <Badge 
+                          variant={rental.status === "active" ? "default" : "secondary"} 
+                          className={`text-xs ${
+                            rental.status === "active" 
+                              ? "bg-green-500/20 text-green-700 hover:bg-green-500/30" 
+                              : "bg-gray-500/20 text-gray-700"
+                          }`}
+                        >
+                          {rental.status}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Bike className="h-3 w-3" />
+                        <span className="truncate">{rental.bike}</span>
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded-full">
+                        <MapPin className="h-3 w-3" />
+                        <span className="hidden sm:inline">{rental.station}</span>
+                      </div>
+                      <span className="text-xs text-muted-foreground font-medium">{rental.time}</span>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </CardContent>
         </Card>
@@ -318,10 +371,10 @@ export default function Dashboard() {
                   <div className="w-2 h-2 bg-primary rounded-full" />
                   Utilization Rate
                 </span>
-                <span className="font-medium text-primary">78%</span>
+                <span className="font-medium text-primary">0%</span>
               </div>
               <div className="h-3 bg-secondary rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full w-[78%] transition-all duration-1000" />
+                <div className="h-full bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full w-[0%] transition-all duration-1000" />
               </div>
             </div>
 
@@ -331,10 +384,10 @@ export default function Dashboard() {
                   <div className="w-2 h-2 bg-yellow-500 rounded-full" />
                   Maintenance Due
                 </span>
-                <span className="font-medium text-yellow-600">8 bikes</span>
+                <span className="font-medium text-yellow-600">0 bikes</span>
               </div>
               <div className="h-3 bg-secondary rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full w-[5%] transition-all duration-1000" />
+                <div className="h-full bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full w-[0%] transition-all duration-1000" />
               </div>
             </div>
 
@@ -342,12 +395,12 @@ export default function Dashboard() {
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground flex items-center gap-2">
                   <div className="w-2 h-2 bg-green-500 rounded-full" />
-                  Customer Satisfaction
+                  System Status
                 </span>
-                <span className="font-medium text-green-600">4.8/5.0</span>
+                <span className="font-medium text-green-600">Ready</span>
               </div>
               <div className="h-3 bg-secondary rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-green-500 to-emerald-500 rounded-full w-[96%] transition-all duration-1000" />
+                <div className="h-full bg-gradient-to-r from-green-500 to-emerald-500 rounded-full w-[100%] transition-all duration-1000" />
               </div>
             </div>
 

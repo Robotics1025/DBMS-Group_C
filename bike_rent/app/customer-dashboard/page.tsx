@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Heart, Star, Filter, Search, MapPin, Battery, Clock, CreditCard, Receipt, User, LogOut, Menu, X, ChevronRight, Award, Truck, Shield } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -30,147 +30,23 @@ interface Bike {
   battery?: number;
   range?: number;
   location: string;
-  distance: number;
+  distance?: number;
   image: string;
   available: boolean;
-  features: string[];
-  description: string;
+  features?: string[];
+  description?: string;
   isFlashSale?: boolean;
   badge?: string;
 }
-
-const mockBikes: Bike[] = [
-  {
-    id: "BK001",
-    name: "Urban E-Cruiser",
-    type: "Electric",
-    brand: "CityBike",
-    price: 1299,
-    originalPrice: 1599,
-    discount: 19,
-    hourlyRate: 15,
-    rating: 4.8,
-    reviews: 124,
-    battery: 85,
-    range: 45,
-    location: "Central Station",
-    distance: 0.5,
-    image: "/uploads/1759650691759-cool-bicycle-outdoors.jpg",
-    available: true,
-    features: ["GPS Tracking", "Electric Motor", "LED Lights", "Phone Holder"],
-    description: "Perfect for city commuting with long battery life and comfortable ride.",
-    isFlashSale: true,
-    badge: "Best Seller"
-  },
-  {
-    id: "BK002", 
-    name: "Mountain Explorer",
-    type: "Mountain",
-    brand: "TrailMaster",
-    price: 899,
-    originalPrice: 1199,
-    discount: 25,
-    hourlyRate: 12,
-    rating: 4.6,
-    reviews: 89,
-    location: "North Park Station",
-    distance: 1.2,
-    image: "/uploads/1759677670759-cool-bicycle-outdoors.jpg",
-    available: true,
-    features: ["Shock Absorption", "All-Terrain Tires", "Gear System", "Water Bottle"],
-    description: "Built for adventures with robust frame and superior grip.",
-    isFlashSale: true,
-    badge: "Adventure"
-  },
-  {
-    id: "BK003",
-    name: "City Commuter",
-    type: "City", 
-    brand: "ComfortRide",
-    price: 599,
-    originalPrice: 799,
-    discount: 25,
-    hourlyRate: 8,
-    rating: 4.4,
-    reviews: 156,
-    location: "Downtown Station",
-    distance: 0.8,
-    image: "/uploads/1759679918404-cool-bicycle-outdoors.jpg",
-    available: true,
-    features: ["Lightweight", "Basket", "Comfort Seat", "Chain Guard"],
-    description: "Ideal for daily commuting with lightweight design and storage.",
-    badge: "Popular"
-  },
-  {
-    id: "BK004",
-    name: "Speed Demon E-Bike",
-    type: "Electric",
-    brand: "SpeedMax",
-    price: 1599,
-    originalPrice: 2099,
-    discount: 24,
-    hourlyRate: 20,
-    rating: 4.9,
-    reviews: 67,
-    battery: 92,
-    range: 60,
-    location: "Tech Hub Station",
-    distance: 2.1,
-    image: "/uploads/1759681502051-cool-bicycle-outdoors.jpg", 
-    available: false,
-    features: ["High Speed Motor", "Premium Battery", "Carbon Frame", "Sport Mode"],
-    description: "High-performance e-bike for speed enthusiasts.",
-    isFlashSale: true,
-    badge: "Premium"
-  },
-  {
-    id: "BK005",
-    name: "Hybrid Comfort",
-    type: "Hybrid",
-    brand: "EcoTech",
-    price: 749,
-    originalPrice: 999,
-    discount: 25,
-    hourlyRate: 10,
-    rating: 4.5,
-    reviews: 203,
-    location: "Mall Station",
-    distance: 1.5,
-    image: "/uploads/1759682651471-cool-bicycle-outdoors.jpg",
-    available: true,
-    features: ["Adjustable Seat", "Multi-Gear", "Puncture Resistant", "Reflectors"],
-    description: "Versatile bike combining comfort and performance.",
-    badge: "Eco Friendly"
-  },
-  {
-    id: "BK006",
-    name: "Racing Pro",
-    type: "Racing",
-    brand: "SpeedMax",
-    price: 1899,
-    originalPrice: 2299,
-    discount: 17,
-    hourlyRate: 22,
-    rating: 4.9,
-    reviews: 45,
-    location: "Sports Complex",
-    distance: 1.8,
-    image: "/uploads/1759682060322-cool-bicycle-outdoors.jpg",
-    available: true,
-    features: ["Carbon Fiber", "Racing Wheels", "Aerodynamic Design", "Pro Pedals"],
-    description: "Professional racing bike for competitive cyclists.",
-    isFlashSale: true,
-    badge: "Top Rated"
-  }
-];
 
 export default function CustomerDashboard() {
   const { user, logout } = useAuth();
   const { notify } = useNotify();
   // Direct rental system - no cart needed
   
-  const [bikes] = useState<Bike[]>(mockBikes);
-  const [filteredBikes, setFilteredBikes] = useState<Bike[]>(mockBikes);
+  const [bikes, setBikes] = useState<Bike[]>([]);
+  const [filteredBikes, setFilteredBikes] = useState<Bike[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [brandFilter, setBrandFilter] = useState<string[]>([]);
@@ -189,8 +65,51 @@ export default function CustomerDashboard() {
     { id: "hybrid", name: "Hybrid", icon: "🔄", count: bikes.filter(b => b.type === "Hybrid").length },
   ];
 
-  const brands = ["CityBike", "TrailMaster", "ComfortRide", "SpeedMax", "EcoTech"];
-  const topSellingBikes = [...bikes].sort((a, b) => b.reviews - a.reviews).slice(0, 4);
+  const brands = Array.from(new Set(bikes.map(bike => bike.brand))).filter(Boolean);
+  const topSellingBikes = [...bikes].sort((a, b) => (b.reviews || 0) - (a.reviews || 0)).slice(0, 4);
+
+  // Fetch bikes from API
+  useEffect(() => {
+    const fetchBikes = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('/api/bikes');
+        if (!response.ok) {
+          throw new Error('Failed to fetch bikes');
+        }
+        const data = await response.json();
+        
+        // Transform API data to match our interface
+        const transformedBikes: Bike[] = data.map((bike: any) => ({
+          id: bike.BikeID || bike.id,
+          name: bike.Model || bike.name || 'Bike',
+          type: bike.Type || 'City',
+          brand: bike.Brand || 'Unknown',
+          price: parseFloat(bike.PricePerHour || '10') * 24, // Convert hourly to daily price
+          hourlyRate: parseFloat(bike.PricePerHour || '10'),
+          rating: 4.0, // Default rating since not in schema
+          reviews: 0, // Default reviews since not in schema
+          location: bike.station?.Name || bike.Station || 'Unknown Location',
+          image: bike.ImageURL || '/bike.jpg',
+          available: bike.Status === 'Available',
+          description: `${bike.Brand} ${bike.Model}`,
+          features: []
+        }));
+        
+        setBikes(transformedBikes);
+        setFilteredBikes(transformedBikes);
+      } catch (error) {
+        console.error('Error fetching bikes:', error);
+        notify.error('Failed to load bikes', 'Please try refreshing the page');
+        setBikes([]);
+        setFilteredBikes([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBikes();
+  }, [notify]);
   
   // Auto-play carousel
   React.useEffect(() => {
@@ -295,20 +214,24 @@ export default function CustomerDashboard() {
                 
                 {/* Quick Actions in Search Area */}
                 <div className="flex items-center gap-2">
-                  <Link href="/customer-dashboard/bike/BK001">
-                    <Button variant="outline" size="sm" className="border-orange-200 text-orange-600 hover:bg-orange-50">
-                      <MapPin className="h-4 w-4 mr-1" />
-                      View Details
-                    </Button>
-                  </Link>
-                  <Button 
-                    size="sm" 
-                    className="bg-orange-500 hover:bg-orange-600 text-white"
-                    onClick={() => window.location.href = `/customer-dashboard/bike/BK001`}
-                  >
-                    <Clock className="h-4 w-4 mr-1" />
-                    Rent Now
-                  </Button>
+                  {bikes.length > 0 && (
+                    <>
+                      <Link href={`/customer-dashboard/bike/${bikes[0].id}`}>
+                        <Button variant="outline" size="sm" className="border-orange-200 text-orange-600 hover:bg-orange-50">
+                          <MapPin className="h-4 w-4 mr-1" />
+                          View Details
+                        </Button>
+                      </Link>
+                      <Button 
+                        size="sm" 
+                        className="bg-orange-500 hover:bg-orange-600 text-white"
+                        onClick={() => window.location.href = `/customer-dashboard/bike/${bikes[0].id}`}
+                      >
+                        <Clock className="h-4 w-4 mr-1" />
+                        Rent Now
+                      </Button>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -388,20 +311,24 @@ export default function CustomerDashboard() {
           
           {/* Mobile Quick Actions */}
           <div className="flex items-center gap-2">
-            <Link href="/customer-dashboard/bike/BK001" className="flex-1">
-              <Button variant="outline" size="sm" className="w-full border-orange-200 text-orange-600 hover:bg-orange-50">
-                <MapPin className="h-4 w-4 mr-1" />
-                View Details
-              </Button>
-            </Link>
-            <Button 
-              size="sm" 
-              className="flex-1 bg-orange-500 hover:bg-orange-600 text-white"
-              onClick={() => window.location.href = `/customer-dashboard/bike/BK001`}
-            >
-              <Clock className="h-4 w-4 mr-1" />
-              Rent Now
-            </Button>
+            {bikes.length > 0 && (
+              <>
+                <Link href={`/customer-dashboard/bike/${bikes[0].id}`} className="flex-1">
+                  <Button variant="outline" size="sm" className="w-full border-orange-200 text-orange-600 hover:bg-orange-50">
+                    <MapPin className="h-4 w-4 mr-1" />
+                    View Details
+                  </Button>
+                </Link>
+                <Button 
+                  size="sm" 
+                  className="flex-1 bg-orange-500 hover:bg-orange-600 text-white"
+                  onClick={() => window.location.href = `/customer-dashboard/bike/${bikes[0].id}`}
+                >
+                  <Clock className="h-4 w-4 mr-1" />
+                  Rent Now
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -619,7 +546,23 @@ export default function CustomerDashboard() {
 
             {/* Bikes Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredBikes.map((bike) => (
+              {loading ? (
+                // Loading skeletons
+                Array.from({ length: 8 }).map((_, i) => (
+                  <Card key={i} className="overflow-hidden">
+                    <div className="w-full h-56 bg-gray-200 animate-pulse" />
+                    <CardContent className="p-4">
+                      <div className="space-y-2">
+                        <div className="h-4 bg-gray-200 rounded animate-pulse" />
+                        <div className="h-3 bg-gray-200 rounded animate-pulse w-2/3" />
+                        <div className="h-6 bg-gray-200 rounded animate-pulse w-1/2" />
+                        <div className="h-8 bg-gray-200 rounded animate-pulse" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              ) : (
+                filteredBikes.map((bike) => (
                 <Card key={bike.id} className="overflow-hidden hover:shadow-lg transition-shadow group cursor-pointer">
                   <Link href={`/customer-dashboard/bike/${bike.id}`}>
                     <div className="relative">
@@ -705,16 +648,24 @@ export default function CustomerDashboard() {
                     </Button>
                   </CardContent>
                 </Card>
-              ))}
+              ))
+              )}
             </div>
 
-            {filteredBikes.length === 0 && (
-              <div className="text-center py-12">
+            {!loading && filteredBikes.length === 0 && (
+              <div className="text-center py-12 col-span-full">
                 <div className="text-gray-400 mb-4">
                   <Search className="h-12 w-12 mx-auto" />
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No bikes found</h3>
-                <p className="text-gray-600">Try adjusting your filters or search terms</p>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  {bikes.length === 0 ? "No bikes available" : "No bikes found"}
+                </h3>
+                <p className="text-gray-600">
+                  {bikes.length === 0 
+                    ? "Please check back later or contact support" 
+                    : "Try adjusting your filters or search terms"
+                  }
+                </p>
               </div>
             )}
           </div>

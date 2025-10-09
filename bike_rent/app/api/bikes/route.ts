@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import fs from "fs/promises";
 import path from "path";
 import { serializeBigInt } from "@/lib/serializer";
+import { bikeQueries, executeQuery } from "@/lib/queries";
 
 const prisma = new PrismaClient();
 
@@ -11,6 +12,24 @@ export const config = {
     bodyParser: false,
   },
 };
+
+// GET /api/bikes - Fetch all bikes for customer dashboard
+export async function GET() {
+  try {
+    const result = await executeQuery(prisma, bikeQueries.getAllBikes, []);
+    
+    if (!result.success) {
+      console.error("Failed to fetch bikes:", result.error);
+      return NextResponse.json({ error: "Failed to fetch bikes" }, { status: 500 });
+    }
+
+    // The executeQuery function now handles BigInt serialization automatically
+    return NextResponse.json(result.data || []);
+  } catch (error) {
+    console.error("GET bikes error:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  }
+}
 
 export async function POST(req: Request) {
   try {

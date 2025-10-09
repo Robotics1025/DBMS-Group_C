@@ -7,12 +7,11 @@ const prisma = new PrismaClient()
 export async function middleware(req: NextRequest) {
   const publicPaths = [
     "/login",
-    "/signup",
+    "/signup", 
     "/landing",
     "/api/login",
     "/api/signup",
     "/api/logout",
-    "/api/auth", // NextAuth routes
   ]
 
   // Skip middleware for public routes

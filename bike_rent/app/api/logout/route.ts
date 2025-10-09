@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server"
 import { PrismaClient } from "@/app/generated/prisma"
+import { sessionQueries, executeQuery } from "@/lib/queries"
+
 const prisma = new PrismaClient()
 
 // Handle POST /api/logout
@@ -15,25 +17,16 @@ export async function POST(req: Request) {
       )
     }
 
-    // Find and deactivate the session
-    const session = await prisma.usersession.updateMany({
-      where: {
-        SessionID: sessionId,
-        IsActive: true,
-      },
-      data: {
-        IsActive: false,
-      },
-    })
+    // Deactivate the session using raw SQL
+    const result = await executeQuery(prisma, sessionQueries.deactivateSession, [sessionId])
 
-    if (session.count === 0) {
-      return NextResponse.json(
-        { error: "Invalid or already logged out session" },
-        { status: 404 }
-      )
+    if (!result.success) {
+      console.error("Failed to deactivate session:", result.error)
+      return NextResponse.json({ error: "Failed to logout" }, { status: 500 })
     }
 
-    return NextResponse.json({ message: "Logout successful" })
+    console.log("Logout successful for session:", sessionId)
+    return NextResponse.json({ success: true, message: "Logout successful" })
   } catch (err: any) {
     console.error("Logout error:", err)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
