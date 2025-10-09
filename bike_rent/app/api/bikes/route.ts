@@ -13,18 +13,62 @@ export const config = {
   },
 };
 
-// GET /api/bikes - Fetch all bikes for customer dashboard
+// GET /api/bikes - Fetch all bikes with maintenance information
 export async function GET() {
   try {
-    const result = await executeQuery(prisma, bikeQueries.getAllBikes, []);
+    // Enhanced query to include maintenance and station information
+    const enhancedBikesQuery = `
+      SELECT 
+        b.BikeID,
+        b.BikeSerialNumber,
+        b.Model,
+        b.BikeType,
+        b.CurrentStatus as Status,
+        b.LastMaintenanceDate,
+        b.RentalRatePerMinute,
+        b.BatteryLevel,
+        b.bike_image,
+        s.StationName,
+        s.StationID,
+        CASE 
+          WHEN b.CurrentStatus IN ('Maintenance', 'Damaged') THEN 1
+          ELSE 0
+        END as NeedsMaintenance,
+        (SELECT COUNT(*) FROM maintenance m WHERE m.BikeID = b.BikeID AND m.Status = 'Scheduled') as PendingMaintenance
+      FROM bike b
+      LEFT JOIN station s ON b.LocationID = s.StationID
+      ORDER BY b.BikeSerialNumber
+    `;
+
+    const result = await executeQuery(prisma, enhancedBikesQuery, []);
     
     if (!result.success) {
       console.error("Failed to fetch bikes:", result.error);
       return NextResponse.json({ error: "Failed to fetch bikes" }, { status: 500 });
     }
 
-    // The executeQuery function now handles BigInt serialization automatically
-    return NextResponse.json(result.data || []);
+    // Serialize the bike data with maintenance information
+    const bikes = (result.data || []).map((bike: any) => ({
+      BikeID: Number(bike.BikeID),
+      BikeSerialNumber: bike.BikeSerialNumber,
+      Model: bike.Model,
+      BikeType: bike.BikeType,
+      Status: bike.Status,
+      LastMaintenance: bike.LastMaintenanceDate,
+      RentalRatePerMinute: Number(bike.RentalRatePerMinute),
+      BatteryLevel: bike.BatteryLevel ? Number(bike.BatteryLevel) : null,
+      bike_image: bike.bike_image,
+      StationName: bike.StationName,
+      StationID: bike.StationID ? Number(bike.StationID) : null,
+      NeedsMaintenance: Boolean(bike.NeedsMaintenance),
+      PendingMaintenance: Number(bike.PendingMaintenance)
+    }));
+
+    return NextResponse.json({ 
+      success: true, 
+      bikes: bikes,
+      count: bikes.length
+    });
   } catch (error) {
     console.error("GET bikes error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

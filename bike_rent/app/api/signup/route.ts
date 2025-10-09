@@ -38,7 +38,8 @@ export async function POST(request: Request) {
       Email,
       PhoneNumber,
       passwordHash,
-      DateOfBirth ? new Date(DateOfBirth).toISOString().slice(0, 10) : null
+      DateOfBirth ? new Date(DateOfBirth).toISOString().slice(0, 10) : null,
+      Role || 'Customer'  // Use provided role or default to Customer
     ])
 
     if (!userResult.success) {

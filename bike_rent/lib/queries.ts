@@ -18,7 +18,7 @@ export const userQueries = {
     INSERT INTO user (
       NationalID, FirstName, LastName, Email, PhoneNumber, 
       PasswordHash, DateOfBirth, Role, RegistrationDate, LoyaltyPoints
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, 'Customer', NOW(), 0)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), 0)
   `,
 
   // Get user by email (for login)

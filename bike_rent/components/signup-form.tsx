@@ -33,7 +33,7 @@ export function SignupForm({
     Email: "",
     PhoneNumber: "",
     DateOfBirth: "",
-    Role: "",
+    Role: "Customer",
     Password: "",
     ConfirmPassword: "",
   })
@@ -98,7 +98,7 @@ export function SignupForm({
           Email: "",
           PhoneNumber: "",
           DateOfBirth: "",
-          Role: "",
+          Role: "Customer",
           Password: "",
           ConfirmPassword: "",
         })
@@ -235,10 +235,11 @@ export function SignupForm({
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="Customer">Customer</SelectItem>
-                        <SelectItem value="Staff">Staff</SelectItem>
-                        <SelectItem value="Administrator">Administrator</SelectItem>
                       </SelectContent>
                     </Select>
+                    <p className="text-xs text-muted-foreground">
+                      Staff and Administrator accounts can only be created by administrators through the admin dashboard.
+                    </p>
                   </div>
                 </div>
               )}
