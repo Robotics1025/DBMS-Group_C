@@ -1,0 +1,151 @@
+/* Print-specific styles for the analytics page */
+
+@media print {
+  /* Hide screen-only elements */
+  .print\\:hidden {
+    display: none !important;
+  }
+  
+  /* Show print-only elements */
+  .print\\:block {
+    display: block !important;
+  }
+  
+  /* Print layout adjustments */
+  .print\\:grid-cols-2 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  
+  .print\\:grid-cols-3 {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+  
+  .print\\:grid-cols-4 {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+  
+  /* Print spacing */
+  .print\\:space-y-4 > * + * {
+    margin-top: 1rem !important;
+  }
+  
+  .print\\:gap-3 {
+    gap: 0.75rem !important;
+  }
+  
+  .print\\:gap-4 {
+    gap: 1rem !important;
+  }
+  
+  .print\\:p-4 {
+    padding: 1rem !important;
+  }
+  
+  /* Print heights */
+  .print\\:h-32 {
+    height: 8rem !important;
+  }
+  
+  /* Print backgrounds and borders */
+  .print\\:bg-transparent {
+    background-color: transparent !important;
+  }
+  
+  .print\\:bg-gray-100 {
+    background-color: #f3f4f6 !important;
+  }
+  
+  .print\\:bg-gray-200 {
+    background-color: #e5e7eb !important;
+  }
+  
+  .print\\:bg-gray-600 {
+    background-color: #4b5563 !important;
+  }
+  
+  .print\\:border {
+    border-width: 1px !important;
+  }
+  
+  .print\\:border-2 {
+    border-width: 2px !important;
+  }
+  
+  .print\\:border-gray-300 {
+    border-color: #d1d5db !important;
+  }
+  
+  .print\\:border-b {
+    border-bottom-width: 1px !important;
+  }
+  
+  .print\\:border-b-gray-300 {
+    border-bottom-color: #d1d5db !important;
+  }
+  
+  .print\\:border-t-gray-300 {
+    border-top-color: #d1d5db !important;
+  }
+  
+  .print\\:border-l-gray-400 {
+    border-left-color: #9ca3af !important;
+  }
+  
+  /* Print text colors */
+  .print\\:text-black {
+    color: #000000 !important;
+  }
+  
+  .print\\:text-gray-600 {
+    color: #4b5563 !important;
+  }
+  
+  .print\\:text-gray-700 {
+    color: #374151 !important;
+  }
+  
+  /* Print shadows */
+  .print\\:shadow-none {
+    box-shadow: none !important;
+  }
+  
+  /* Remove gradients and complex styling for print */
+  .print\\:bg-none {
+    background: none !important;
+  }
+  
+  /* Page breaks */
+  .print\\:break-after-page {
+    page-break-after: always !important;
+  }
+  
+  .print\\:break-inside-avoid {
+    page-break-inside: avoid !important;
+  }
+  
+  /* Print layout */
+  .print\\:flex-row {
+    flex-direction: row !important;
+  }
+  
+  .print\\:justify-between {
+    justify-content: space-between !important;
+  }
+  
+  /* Ensure proper printing layout */
+  @page {
+    margin: 1in;
+    size: A4;
+  }
+  
+  body {
+    -webkit-print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+  
+  /* Force background printing */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+}

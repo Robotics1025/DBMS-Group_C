@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MapPin, Plus, Search, Bike, TrendingUp, Clock, Phone, Navigation, MoreHorizontal, Eye, Settings } from "lucide-react";
 import Image from "next/image";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AddStationDialog } from "@/components/Stations/add-station-dialog";
 import { ViewDetailsDialog } from "@/components/Stations/view-details-dialog";
 import { ManageStationDialog } from "@/components/Stations/manage-station-dialog";
@@ -22,15 +24,20 @@ interface Station {
   rented: number;
   maintenance: number;
   utilization: number;
-  todayRentals?: number;
-  revenue?: string;
-  coordinates?: string;
+  todayRentals: number;
+  revenue: string;
+  coordinates: string;
 }
 
 export default function Stations() {
   const [stations, setStations] = useState<Station[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
 
   const [selectedStation, setSelectedStation] = useState<Station | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
@@ -63,6 +70,25 @@ export default function Stations() {
     }
     fetchStations();
   }, []);
+
+  // Filter stations by search term
+  const filteredStations = stations.filter(station =>
+    station.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    station.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    station.city.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Pagination logic
+  const totalFilteredStations = filteredStations.length;
+  const totalPages = Math.ceil(totalFilteredStations / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedStations = filteredStations.slice(startIndex, endIndex);
+
+  // Reset to page 1 when search changes
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
 
   // Summary stats
   const totalCapacity = stations.reduce((sum, s) => sum + (s.capacity || 0), 0);
@@ -324,9 +350,21 @@ export default function Stations() {
             <Search className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
             <Input 
               placeholder="Search stations by name, address, or city..." 
-              className="pl-12 h-12 bg-background/50 backdrop-blur-sm border-muted/50 focus:border-primary/50 transition-colors" 
+              className="pl-12 h-12 bg-background/50 backdrop-blur-sm border-muted/50 focus:border-primary/50 transition-colors"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
+          {searchTerm && (
+            <div className="mt-2 px-1">
+              <p className="text-xs text-muted-foreground">
+                {totalFilteredStations > 0 
+                  ? `Found ${totalFilteredStations} stations matching "${searchTerm}"`
+                  : `No stations found matching "${searchTerm}"`
+                }
+              </p>
+            </div>
+          )}
         </CardHeader>
       </Card>
 
@@ -350,13 +388,11 @@ export default function Stations() {
         </CardHeader>
         
         <CardContent className="p-0 relative z-10">
-          <div className="overflow-x-auto">
-            <table className="w-full">
+          <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+            <table className="w-full min-w-[700px]">
               <thead>
                 <tr className="border-b bg-muted/50">
                   <th className="text-left p-4 font-semibold text-sm text-muted-foreground">Station</th>
-                  <th className="text-left p-4 font-semibold text-sm text-muted-foreground">Location</th>
-                  <th className="text-left p-4 font-semibold text-sm text-muted-foreground">Contact</th>
                   <th className="text-center p-4 font-semibold text-sm text-muted-foreground">Capacity</th>
                   <th className="text-center p-4 font-semibold text-sm text-muted-foreground">Available</th>
                   <th className="text-center p-4 font-semibold text-sm text-muted-foreground">Utilization</th>
@@ -364,7 +400,7 @@ export default function Stations() {
                 </tr>
               </thead>
               <tbody>
-                {stations.map((station, index) => (
+                {paginatedStations.map((station, index) => (
                   <tr 
                     key={station.id} 
                     className={`border-b hover:bg-muted/30 transition-colors ${
@@ -378,25 +414,9 @@ export default function Stations() {
                         </div>
                         <div>
                           <h4 className="font-semibold text-base">{station.name}</h4>
-                          <p className="text-sm text-muted-foreground">{station.city}</p>
+                          <p className="text-sm text-muted-foreground">{station.address}</p>
+                          <p className="text-xs text-muted-foreground">{station.city}</p>
                         </div>
-                      </div>
-                    </td>
-                    
-                    <td className="p-4">
-                      <div className="space-y-1">
-                        <p className="text-sm font-medium">{station.address}</p>
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <Navigation className="h-3 w-3" />
-                          <span>{station.coordinates || "No coordinates"}</span>
-                        </div>
-                      </div>
-                    </td>
-                    
-                    <td className="p-4">
-                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                        <Phone className="h-3 w-3" />
-                        <span>{station.phone}</span>
                       </div>
                     </td>
                     
@@ -449,30 +469,37 @@ export default function Stations() {
                     </td>
                     
                     <td className="p-4">
-                      <div className="flex items-center justify-center gap-2">
-                        <Button 
-                          size="sm" 
-                          variant="ghost" 
-                          onClick={() => handleViewDetails(station)}
-                          className="h-8 w-8 p-0 hover:bg-primary/20"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="ghost" 
-                          onClick={() => handleManageStation(station)}
-                          className="h-8 w-8 p-0 hover:bg-primary/20"
-                        >
-                          <Settings className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="ghost" 
-                          className="h-8 w-8 p-0 hover:bg-primary/20"
-                        >
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
+                      <div className="flex items-center justify-center">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button 
+                              variant="ghost" 
+                              className="h-8 w-8 p-0 hover:bg-gray-100 rounded-full"
+                            >
+                              <span className="sr-only">Open menu</span>
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent 
+                            align="end" 
+                            className="bg-white/95 backdrop-blur-sm border border-gray-200/50 shadow-lg rounded-lg w-48"
+                          >
+                            <DropdownMenuItem 
+                              className="cursor-pointer hover:bg-blue-50 focus:bg-blue-50 px-3 py-2"
+                              onClick={() => handleViewDetails(station)}
+                            >
+                              <Eye className="mr-3 h-4 w-4 text-blue-600" />
+                              <span className="text-gray-700 font-medium">View Details</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              className="cursor-pointer hover:bg-gray-50 focus:bg-gray-50 px-3 py-2"
+                              onClick={() => handleManageStation(station)}
+                            >
+                              <Settings className="mr-3 h-4 w-4 text-gray-600" />
+                              <span className="text-gray-700 font-medium">Manage</span>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </td>
                   </tr>
@@ -481,7 +508,7 @@ export default function Stations() {
             </table>
           </div>
           
-          {stations.length === 0 && (
+          {totalFilteredStations === 0 && (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <div className="w-24 h-24 rounded-full bg-muted/50 flex items-center justify-center mb-4">
                 <MapPin className="h-12 w-12 text-muted-foreground" />
@@ -495,6 +522,59 @@ export default function Stations() {
             </div>
           )}
         </CardContent>
+        
+        {/* Pagination Controls */}
+        {totalFilteredStations > 0 && (
+          <div className="flex items-center justify-between px-6 py-4 border-t bg-muted/30">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Rows per page:</span>
+              <Select value={itemsPerPage.toString()} onValueChange={(value) => setItemsPerPage(Number(value))}>
+                <SelectTrigger className="w-16 h-8">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="5">5</SelectItem>
+                  <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="20">20</SelectItem>
+                  <SelectItem value="50">50</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-muted-foreground">
+                {startIndex + 1}–{Math.min(endIndex, totalFilteredStations)} of {totalFilteredStations}
+              </span>
+              
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  onClick={() => setCurrentPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  <span className="sr-only">Go to previous page</span>
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  onClick={() => setCurrentPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                >
+                  <span className="sr-only">Go to next page</span>
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </Card>
 
       {/* Dialogs */}

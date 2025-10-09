@@ -6,69 +6,87 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import Image from "next/image"
 import Link from "next/link"
-import { Loader2 } from "lucide-react"
-import { toast } from "react-hot-toast"
+import { Loader2, Users } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
+import { useAuth, getDashboardPath, UserRole } from "@/contexts/AuthContext"
+import { useNotify } from "@/hooks/use-notify"
 
 export function LoginForm({ className, ...props }: React.ComponentProps<"div">) {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [selectedRole, setSelectedRole] = useState<UserRole>("customer")
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const searchParams = useSearchParams()
-  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard"
+  const { login, user, isAuthenticated } = useAuth()
+  const { notify } = useNotify()
   const message = searchParams.get("message")
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      const dashboardPath = getDashboardPath(user.role)
+      router.push(dashboardPath)
+    }
+  }, [isAuthenticated, user, router])
 
   // Show success message if redirected from signup
   useEffect(() => {
     if (message) {
-      toast.success(message)
+      notify.success("Account created", message)
       const url = new URL(window.location.href)
       url.searchParams.delete("message")
       window.history.replaceState({}, "", url.toString())
     }
-  }, [message])
+  }, [message, notify])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!email || !password) {
-      toast.error("Please fill in all fields")
+      notify.error("Please fill in all fields")
       return
     }
 
     setLoading(true)
 
     try {
-      const res = await fetch("/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ Email: email, Password: password }),
-      })
+      const result = await login(email, password)
 
-      const data = await res.json()
-
-      if (!res.ok) {
-        toast.error(data.error || "Login failed")
+      if (!result.success) {
+        notify.error("Login failed", result.message || "Invalid credentials")
         return
       }
 
-      // Save sessionId in cookie for middleware protection
-      document.cookie = `sessionId=${data.sessionId}; path=/; max-age=${7 * 24 * 60 * 60}`
-
-      toast.success("Login successful!")
-      router.push(callbackUrl)
+      if (result.user) {
+        const dashboardPath = getDashboardPath(result.user.role)
+        notify.success("Login successful!", `Welcome ${result.user.name}`)
+        router.push(dashboardPath)
+      }
     } catch (err) {
       console.error("Login failed:", err)
-      toast.error("Login failed. Please try again.")
+      notify.error("Login failed", "Please try again.")
     } finally {
       setLoading(false)
     }
   }
 
   const handleSocialLogin = async (provider: string) => {
-    toast.error(`${provider} login is not implemented yet.`)
+    notify.warning("Coming soon", `${provider} login is not implemented yet.`)
+  }
+
+  // Demo credentials for easy testing
+  const demoCredentials = [
+    { email: "admin@bikerent.com", password: "admin123", role: "Admin", color: "text-red-600" },
+    { email: "staff@bikerent.com", password: "staff123", role: "Staff", color: "text-green-600" },
+    { email: "customer@bikerent.com", password: "customer123", role: "Customer", color: "text-blue-600" }
+  ]
+
+  const handleDemoLogin = (demoEmail: string, demoPassword: string) => {
+    setEmail(demoEmail)
+    setPassword(demoPassword)
   }
 
   return (
@@ -80,8 +98,33 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
             <div className="flex flex-col items-center text-center space-y-1">
               <h1 className="text-2xl font-bold">Welcome back</h1>
               <p className="text-muted-foreground text-balance">
-                Login to your Rent Management System
+                Login to your Bike Rental System
               </p>
+            </div>
+
+            {/* Demo Credentials */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h3 className="text-sm font-medium text-blue-800 mb-2 flex items-center">
+                <Users className="h-4 w-4 mr-1" />
+                Demo Accounts
+              </h3>
+              <div className="space-y-2">
+                {demoCredentials.map((demo) => (
+                  <button
+                    key={demo.email}
+                    type="button"
+                    className="w-full text-left p-2 bg-white rounded border hover:bg-gray-50 transition-colors"
+                    onClick={() => handleDemoLogin(demo.email, demo.password)}
+                    disabled={loading}
+                  >
+                    <div className="text-xs">
+                      <div className={`font-medium ${demo.color}`}>{demo.role}</div>
+                      <div className="text-gray-600">{demo.email}</div>
+                      <div className="text-gray-500">Password: {demo.password}</div>
+                    </div>
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Email */}

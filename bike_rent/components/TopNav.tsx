@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Bell, Search, User, X } from "lucide-react"
+import { Search, User, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { motion, AnimatePresence } from "framer-motion"
+import { NotificationBell } from "@/components/NotificationBell"
 
 export function TopNav() {
   const [showMobileSearch, setShowMobileSearch] = useState(false)
@@ -49,10 +50,7 @@ export function TopNav() {
         {/* Right side actions */}
         <div className="flex items-center gap-3">
           {/* Notifications */}
-          <Button variant="ghost" size="icon" className="relative">
-            <Bell className="h-5 w-5" />
-            <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-destructive" />
-          </Button>
+          <NotificationBell />
 
           {/* User Menu */}
           <DropdownMenu>
