@@ -46,6 +46,11 @@ Administrators: Have full system access to generate reports, manage all data, ma
 - Documentation & ERD
 - Maintainers
 
+## Prerequisites
+
+- Node.js v18+ 
+- MySQL server 
+- Git
 
 # 🗄️ Core Entities & Database Schema
 
