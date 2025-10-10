@@ -78,6 +78,27 @@ NEXT_PUBLIC_BASE_URL — e.g.:
 NEXT_PUBLIC_BASE_URL="http://localhost:3000"
 (Optional) NEXTAUTH_URL, NEXTAUTH_SECRET if you use NextAuth or other auth providers.
 
+## Database setup & seeding
+This project includes Prisma and SQL scripts for initializing or populating the database.
+
+From project root:
+
+mysql -u root -p bike_rental_db < "SQL-Scripts/bike-rental-seed.sql"
+
+## Run the app
+Development
+
+From bike_rent:
+npm run dev
+
+## Build & Production
+
+Build:
+npm run build
+Start:
+npm start
+For production deployments, consider using Vercel, Netlify (for frontend), or a Node process manager (PM2) and a managed MySQL instance.
+
 
 # 🗄️ Core Entities & Database Schema
 
@@ -181,25 +202,21 @@ Frontend: (Proposed) HTML, CSS, JavaScript, React
 
 
 >>>>>>> 3c66385 (the frontend)
-## 📁 Repository Structure
 
+## High level Project structure 
 
-DBMS-Bike-Rental_Group_C/
+bike_rent/
+    app/ — Next.js app (routes, pages, layouts)
+    components/ — React components
+    prisma/ — Prisma schema & migrations
+    public/ — static assets (images, svg)
+    package.json — scripts & dependencies
+    next.config.ts, tsconfig.json, etc.
+Documentation/ — ERD, data dictionary, SDLC, use cases (PDF/DOCX)
 
-├── Documentation/
+SQL-Scripts
 
-│ └── SDLC-Bike-Rental_DBMS(GROUP_C).pdf
-
-├── Database/
-
-│ ├── Schema/
-
-│ └── Sample_Data/
-
-├── Source_Code/
-
-└── README.md
-
+README.md — this file
 
 
 ## 👨‍💻 Development Team (Group C)
@@ -213,8 +230,7 @@ Mugole Joel - (GitHub: Robotics1025)
 
 Kigozi Allan - (GitHub:)
 
-<<<<<<< HEAD
 Nalubega Shadia - (GitHub:)
-=======
-Nalubega Shadia - (GitHub:)
->>>>>>> 3c66385 (the frontend)
+
+
+
