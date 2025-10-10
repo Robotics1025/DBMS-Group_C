@@ -10,12 +10,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { 
-  Receipt, 
-  Search, 
-  Filter, 
+import Image from "next/image";
+import {
+  Receipt,
+  Search,
+  Filter,
   Download,
-  Print,
+  Printer,
   Calendar,
   User,
   Bike,
@@ -305,66 +306,171 @@ export default function ReceiptsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Receipt Management</h1>
-          <p className="text-gray-600">Generate and manage rental receipts</p>
+    <div className="space-y-6 relative min-h-screen">
+      {/* Enhanced Background Pattern */}
+      <div className="absolute inset-0 -z-10 overflow-hidden">
+        <div className="absolute top-0 right-0 w-80 h-80 opacity-[0.02] rotate-12 animate-pulse">
+          <Image 
+            src="/assets/background/shape-square.svg" 
+            alt="" 
+            fill 
+            className="object-contain"
+          />
+        </div>
+        <div className="absolute bottom-20 left-10 w-60 h-60 opacity-[0.03] -rotate-45 animate-pulse delay-1000">
+          <Image 
+            src="/assets/background/shape-square.svg" 
+            alt="" 
+            fill 
+            className="object-contain"
+          />
+        </div>
+        <div className="absolute inset-0 bg-gradient-to-br from-transparent via-background/50 to-background/20" />
+      </div>
+
+      {/* Header with Cool Background */}
+      <div className="relative bg-gradient-to-r from-emerald-500/5 via-green-500/5 to-teal-500/5 rounded-2xl p-8 border backdrop-blur-sm overflow-hidden">
+        <div className="flex items-center justify-between relative z-10">
+          <div>
+            <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+              Receipt Management
+            </h1>
+            <p className="text-muted-foreground mt-2 text-lg">
+              Generate professional receipts for customer transactions
+            </p>
+          </div>
+          <div className="hidden md:block relative w-40 h-40">
+            <Image 
+              src="/assets/illustrations/illustration-dashboard.webp" 
+              alt="Receipt Management illustration" 
+              fill
+              className="object-contain"
+            />
+          </div>
+        </div>
+        
+        {/* Background shapes in header */}
+        <div className="absolute top-2 left-2 w-20 h-20 opacity-5 rotate-45">
+          <Image 
+            src="/assets/background/shape-square.svg" 
+            alt=""
+            fill
+            className="object-contain"
+          />
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Rentals</CardTitle>
-            <Receipt className="h-4 w-4 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{rentals.length}</div>
-            <p className="text-xs text-gray-600">All rentals</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Receipts Generated</CardTitle>
-            <CheckCircle className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {rentals.filter(r => r.ReceiptGenerated).length}
-            </div>
-            <p className="text-xs text-gray-600">Have receipts</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Paid Rentals</CardTitle>
-            <CreditCard className="h-4 w-4 text-purple-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-purple-600">
-              {rentals.filter(r => r.PaymentStatus === 'Completed').length}
-            </div>
-            <p className="text-xs text-gray-600">Payment completed</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-            <FileText className="h-4 w-4 text-orange-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-orange-600">
-              RM {rentals.reduce((sum, r) => sum + r.TotalCost, 0).toFixed(2)}
-            </div>
-            <p className="text-xs text-gray-600">From all rentals</p>
-          </CardContent>
-        </Card>
+      <div className="grid gap-4 md:grid-cols-4">
+        {[
+          {
+            title: "Total Rentals",
+            value: rentals.length,
+            change: "All rentals",
+            icon: Receipt,
+            colors: {
+              bg: "bg-gradient-to-br from-blue-100 to-blue-50",
+              iconBg: "bg-blue-500",
+              iconColor: "text-white",
+              textColor: "text-blue-700",
+              valueColor: "text-blue-800",
+              changeColor: "text-blue-600"
+            }
+          },
+          {
+            title: "Receipts Generated",
+            value: rentals.filter(r => r.ReceiptGenerated).length,
+            change: "Have receipts",
+            icon: CheckCircle,
+            colors: {
+              bg: "bg-gradient-to-br from-green-100 to-green-50",
+              iconBg: "bg-green-500",
+              iconColor: "text-white",
+              textColor: "text-green-700",
+              valueColor: "text-green-800",
+              changeColor: "text-green-600"
+            }
+          },
+          {
+            title: "Paid Rentals",
+            value: rentals.filter(r => r.PaymentStatus === 'Completed').length,
+            change: "Payment completed",
+            icon: CreditCard,
+            colors: {
+              bg: "bg-gradient-to-br from-purple-100 to-purple-50",
+              iconBg: "bg-purple-500",
+              iconColor: "text-white",
+              textColor: "text-purple-700",
+              valueColor: "text-purple-800",
+              changeColor: "text-purple-600"
+            }
+          },
+          {
+            title: "Total Revenue",
+            value: `RM ${rentals.reduce((sum, r) => sum + r.TotalCost, 0).toFixed(2)}`,
+            change: "From all rentals",
+            icon: FileText,
+            colors: {
+              bg: "bg-gradient-to-br from-orange-100 to-orange-50",
+              iconBg: "bg-orange-500",
+              iconColor: "text-white",
+              textColor: "text-orange-700",
+              valueColor: "text-orange-800",
+              changeColor: "text-orange-600"
+            }
+          }
+        ].map((stat, index) => {
+          const Icon = stat.icon;
+          const colors = stat.colors;
+          
+          return (
+            <Card key={stat.title} className={`${colors.bg} border-0 hover:shadow-lg transition-all duration-300 overflow-hidden relative rounded-2xl`}>
+              {/* Dot Pattern Background */}
+              <div className="absolute inset-0 opacity-20">
+                <div className={`absolute inset-0 ${colors.textColor}`}>
+                  <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                      <pattern id={`receipt-dots-${index}`} x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                        <circle cx="10" cy="10" r="1" fill="currentColor"/>
+                      </pattern>
+                    </defs>
+                    <rect width="100%" height="100%" fill={`url(#receipt-dots-${index})`}/>
+                  </svg>
+                </div>
+              </div>
+              
+              {/* Shape Pattern */}
+              <div className="absolute top-4 right-4 w-16 h-16 opacity-10">
+                <Image 
+                  src="/assets/background/shape-square.svg" 
+                  alt=""
+                  fill
+                  className="object-contain"
+                />
+              </div>
+              
+              <CardContent className="p-6 relative z-10">
+                <div className="flex items-start justify-between mb-4">
+                  <div className={`p-3 rounded-xl ${colors.iconBg}`}>
+                    <Icon className={`h-6 w-6 ${colors.iconColor}`} />
+                  </div>
+                </div>
+                
+                <div className="space-y-1">
+                  <h3 className={`text-sm font-medium ${colors.textColor}`}>
+                    {stat.title}
+                  </h3>
+                  <div className={`text-3xl font-bold ${colors.valueColor}`}>
+                    {stat.value}
+                  </div>
+                  <p className={`text-xs ${colors.changeColor}`}>
+                    {stat.change}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       {/* Search and Filters */}
@@ -582,7 +688,7 @@ export default function ReceiptsPage() {
                   Download
                 </Button>
                 <Button onClick={handlePrint}>
-                  <Print className="w-4 h-4 mr-2" />
+                  <Printer className="w-4 h-4 mr-2" />
                   Print
                 </Button>
               </div>

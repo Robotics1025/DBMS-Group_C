@@ -17,43 +17,38 @@ export async function GET(request: NextRequest) {
     let whereClause = 'WHERE 1=1';
     const queryParams: any[] = [];
 
-    if (status) {
-      whereClause += ' AND bm.Status = ?';
-      queryParams.push(status);
-    }
-
     if (bikeId) {
       whereClause += ' AND bm.BikeID = ?';
       queryParams.push(parseInt(bikeId));
     }
 
     if (stationId) {
-      whereClause += ' AND (bm.FromStationID = ? OR bm.ToStationID = ?)';
+      whereClause += ' AND (bm.FromLocationID = ? OR bm.ToLocationID = ?)';
       queryParams.push(parseInt(stationId), parseInt(stationId));
     }
 
-    // Get movement history with bike and station information
+    // Get movement history with bike and location information
     const movementQuery = `
       SELECT 
         bm.MovementID,
         bm.BikeID,
         bm.MovementDate,
-        bm.StaffName,
-        bm.Status,
-        bm.Reason,
+        bm.StaffID,
         bm.Notes,
-        bm.CompletionDate,
         b.BikeSerialNumber,
         b.Model as BikeModel,
         b.BikeType,
-        s1.StationName as FromStation,
-        s1.Location as FromLocation,
-        s2.StationName as ToStation,
-        s2.Location as ToLocation
-      FROM bike_movement bm
+        l1.LocationName as FromStation,
+        l1.Address as FromLocation,
+        l2.LocationName as ToStation,
+        l2.Address as ToLocation,
+        u.FirstName as StaffFirstName,
+        u.LastName as StaffLastName
+      FROM bikemovement bm
       JOIN bike b ON bm.BikeID = b.BikeID
-      JOIN station s1 ON bm.FromStationID = s1.StationID
-      JOIN station s2 ON bm.ToStationID = s2.StationID
+      JOIN location l1 ON bm.FromLocationID = l1.LocationID
+      JOIN location l2 ON bm.ToLocationID = l2.LocationID
+      JOIN user u ON bm.StaffID = u.UserID
       ${whereClause}
       ORDER BY bm.MovementDate DESC
       LIMIT ? OFFSET ?
@@ -88,20 +83,18 @@ export async function GET(request: NextRequest) {
       ToStation: movement.ToStation,
       ToLocation: movement.ToLocation,
       MovementDate: movement.MovementDate,
-      StaffName: movement.StaffName,
-      Status: movement.Status,
-      Reason: movement.Reason,
-      Notes: movement.Notes,
-      CompletionDate: movement.CompletionDate
+      StaffName: `${movement.StaffFirstName} ${movement.StaffLastName}`,
+      Notes: movement.Notes
     }));
 
     // Get total count for pagination
     const countQuery = `
       SELECT COUNT(*) as total
-      FROM bike_movement bm
+      FROM bikemovement bm
       JOIN bike b ON bm.BikeID = b.BikeID
-      JOIN station s1 ON bm.FromStationID = s1.StationID
-      JOIN station s2 ON bm.ToStationID = s2.StationID
+      JOIN location l1 ON bm.FromLocationID = l1.LocationID
+      JOIN location l2 ON bm.ToLocationID = l2.LocationID
+      JOIN user u ON bm.StaffID = u.UserID
       ${whereClause.replace('LIMIT ? OFFSET ?', '')}
     `;
 
@@ -165,7 +158,7 @@ export async function PUT(request: NextRequest) {
     // Check if movement record exists
     const checkQuery = `
       SELECT bm.*, b.BikeID, b.CurrentStatus
-      FROM bike_movement bm
+      FROM bikemovement bm
       JOIN bike b ON bm.BikeID = b.BikeID
       WHERE bm.MovementID = ?
     `;
@@ -181,17 +174,9 @@ export async function PUT(request: NextRequest) {
 
     const movementRecord = checkResult.data[0];
 
-    // Update movement record
-    let updateQuery = `UPDATE bike_movement SET Status = ?`;
-    let updateParams = [Status];
-
-    if (Status === 'Completed') {
-      updateQuery += `, CompletionDate = NOW()`;
-      if (CompletionNotes) {
-        updateQuery += `, Notes = CONCAT(COALESCE(Notes, ''), '\n\nCompletion: ', ?)`;
-        updateParams.push(CompletionNotes);
-      }
-    }
+    // Update movement record notes
+    let updateQuery = `UPDATE bikemovement SET Notes = ?`;
+    let updateParams = [CompletionNotes || 'Updated'];
 
     updateQuery += ` WHERE MovementID = ?`;
     updateParams.push(MovementID);
@@ -206,9 +191,9 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Update bike status and location based on movement status
+    // Update bike location if movement is completed
     if (Status === 'Completed') {
-      // Move bike to destination station and set status to Available
+      // Move bike to destination location and set status to Available
       const updateBikeQuery = `
         UPDATE bike 
         SET LocationID = ?, CurrentStatus = 'Available'
@@ -216,7 +201,7 @@ export async function PUT(request: NextRequest) {
       `;
 
       const bikeUpdateResult = await executeQuery(prisma, updateBikeQuery, [
-        movementRecord.ToStationID, 
+        movementRecord.ToLocationID, 
         movementRecord.BikeID
       ]);
       
@@ -226,20 +211,6 @@ export async function PUT(request: NextRequest) {
           { success: false, message: 'Movement updated but failed to update bike location' },
           { status: 500 }
         );
-      }
-    } else if (Status === 'Cancelled') {
-      // Reset bike status to Available at original location
-      const updateBikeQuery = `
-        UPDATE bike 
-        SET CurrentStatus = 'Available'
-        WHERE BikeID = ?
-      `;
-
-      const bikeUpdateResult = await executeQuery(prisma, updateBikeQuery, [movementRecord.BikeID]);
-      
-      if (!bikeUpdateResult.success) {
-        console.warn('Failed to reset bike status after cancellation:', bikeUpdateResult.error);
-        // Continue even if bike status update fails
       }
     }
 

@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 
 export function StaffTopNav() {
   const { user, logout } = useAuth();
@@ -42,15 +43,16 @@ export function StaffTopNav() {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 z-50">
+    <header className="fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 z-50 shrink-0">
       <div className="flex items-center justify-between h-full px-6">
-        {/* Left Section - Logo & Title */}
+        {/* Left Section - Mobile Trigger, Logo & Title */}
         <div className="flex items-center gap-4">
+          <SidebarTrigger className="md:hidden" />
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center shadow-lg">
               <span className="text-white font-bold text-sm">BR</span>
             </div>
-            <div>
+            <div className="hidden sm:block">
               <h1 className="text-xl font-bold text-gray-900">BikeRental</h1>
               <p className="text-xs text-gray-500">Staff Dashboard</p>
             </div>
@@ -58,18 +60,23 @@ export function StaffTopNav() {
         </div>
 
         {/* Center Section - Search */}
-        <div className="flex-1 max-w-xl mx-8">
-          <div className="relative">
+        <div className="hidden md:flex flex-1 max-w-xl mx-8">
+          <div className="relative w-full">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
               placeholder="Search customers, bikes, transactions..."
-              className="pl-10 pr-4 bg-gray-50 border-gray-200 focus:bg-white"
+              className="pl-10 pr-4 bg-gray-50 border-gray-200 focus:bg-white w-full"
             />
           </div>
         </div>
 
         {/* Right Section - Actions & User */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 md:gap-4">
+          {/* Mobile Search Button */}
+          <Button variant="ghost" size="icon" className="md:hidden">
+            <Search className="h-5 w-5" />
+          </Button>
+          
           {/* Notifications */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

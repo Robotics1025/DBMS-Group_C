@@ -9,7 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useToast } from "sonner";
+import { toast } from "sonner";
+import Image from "next/image";
 import { 
   Wrench, 
   Search, 
@@ -79,7 +80,6 @@ const STATUS_COLORS = {
 };
 
 export default function MaintenancePage() {
-  const { toast } = useToast();
   const [bikes, setBikes] = useState<Bike[]>([]);
   const [maintenanceRecords, setMaintenanceRecords] = useState<MaintenanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -219,56 +219,162 @@ export default function MaintenancePage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Bike Maintenance</h1>
-          <p className="text-gray-600">Manage bike maintenance and repairs</p>
+    <div className="space-y-6 relative min-h-screen">
+      {/* Enhanced Background Pattern */}
+      <div className="absolute inset-0 -z-10 overflow-hidden">
+        <div className="absolute top-0 right-0 w-80 h-80 opacity-[0.02] rotate-12 animate-pulse">
+          <Image 
+            src="/assets/background/shape-square.svg" 
+            alt="" 
+            fill 
+            className="object-contain"
+          />
         </div>
-        <Button 
-          onClick={() => setShowRecordsDialog(true)}
-          variant="outline"
-        >
-          <FileText className="w-4 h-4 mr-2" />
-          View Records
-        </Button>
+        <div className="absolute bottom-20 left-10 w-60 h-60 opacity-[0.03] -rotate-45 animate-pulse delay-1000">
+          <Image 
+            src="/assets/background/shape-square.svg" 
+            alt="" 
+            fill 
+            className="object-contain"
+          />
+        </div>
+        <div className="absolute inset-0 bg-gradient-to-br from-transparent via-background/50 to-background/20" />
+      </div>
+
+      {/* Header with Cool Background */}
+      <div className="relative bg-gradient-to-r from-orange-500/5 via-red-500/5 to-pink-500/5 rounded-2xl p-8 border backdrop-blur-sm overflow-hidden">
+        <div className="flex items-center justify-between relative z-10">
+          <div>
+            <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
+              Bike Maintenance
+            </h1>
+            <p className="text-muted-foreground mt-2 text-lg">
+              Keep your fleet running smoothly with preventive care
+            </p>
+          </div>
+          <div className="flex gap-3">
+            <Button 
+              onClick={() => setShowRecordsDialog(true)}
+              variant="outline"
+              className="bg-white/80 backdrop-blur-sm hover:bg-white"
+            >
+              <FileText className="w-4 h-4 mr-2" />
+              View Records
+            </Button>
+          </div>
+        </div>
+        
+        {/* Background shapes in header */}
+        <div className="absolute top-2 left-2 w-20 h-20 opacity-5 rotate-45">
+          <Image 
+            src="/assets/background/shape-square.svg" 
+            alt=""
+            fill
+            className="object-contain"
+          />
+        </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Needs Maintenance</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-yellow-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{stats.needsMaintenance}</div>
-            <p className="text-xs text-gray-600">Bikes requiring attention</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Recent Maintenance</CardTitle>
-            <Wrench className="h-4 w-4 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{stats.recentRecords}</div>
-            <p className="text-xs text-gray-600">Completed this week</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Bikes</CardTitle>
-            <Settings2 className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">{bikes.length}</div>
-            <p className="text-xs text-gray-600">In fleet</p>
-          </CardContent>
-        </Card>
+      <div className="grid gap-4 md:grid-cols-3">
+        {[
+          {
+            title: "Needs Maintenance",
+            value: stats.needsMaintenance,
+            change: "Bikes requiring attention",
+            icon: AlertTriangle,
+            colors: {
+              bg: "bg-gradient-to-br from-yellow-100 to-yellow-50",
+              iconBg: "bg-yellow-500",
+              iconColor: "text-white",
+              textColor: "text-yellow-700",
+              valueColor: "text-yellow-800",
+              changeColor: "text-yellow-600"
+            }
+          },
+          {
+            title: "Recent Maintenance", 
+            value: stats.recentRecords,
+            change: "Completed this week",
+            icon: Wrench,
+            colors: {
+              bg: "bg-gradient-to-br from-blue-100 to-blue-50",
+              iconBg: "bg-blue-500",
+              iconColor: "text-white",
+              textColor: "text-blue-700",
+              valueColor: "text-blue-800",
+              changeColor: "text-blue-600"
+            }
+          },
+          {
+            title: "Total Fleet",
+            value: bikes.length,
+            change: "Bikes in system",
+            icon: Settings2,
+            colors: {
+              bg: "bg-gradient-to-br from-green-100 to-green-50",
+              iconBg: "bg-green-500",
+              iconColor: "text-white",
+              textColor: "text-green-700",
+              valueColor: "text-green-800",
+              changeColor: "text-green-600"
+            }
+          }
+        ].map((stat, index) => {
+          const Icon = stat.icon;
+          const colors = stat.colors;
+          
+          return (
+            <Card key={stat.title} className={`${colors.bg} border-0 hover:shadow-lg transition-all duration-300 overflow-hidden relative rounded-2xl`}>
+              {/* Dot Pattern Background */}
+              <div className="absolute inset-0 opacity-20">
+                <div className={`absolute inset-0 ${colors.textColor}`}>
+                  <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                      <pattern id={`maintenance-dots-${index}`} x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                        <circle cx="10" cy="10" r="1" fill="currentColor"/>
+                      </pattern>
+                    </defs>
+                    <rect width="100%" height="100%" fill={`url(#maintenance-dots-${index})`}/>
+                  </svg>
+                </div>
+              </div>
+              
+              {/* Shape Pattern */}
+              <div className="absolute top-4 right-4 w-16 h-16 opacity-10">
+                <Image 
+                  src="/assets/background/shape-square.svg" 
+                  alt=""
+                  fill
+                  className="object-contain"
+                />
+              </div>
+              
+              <CardContent className="p-6 relative z-10">
+                <div className="flex items-start justify-between mb-4">
+                  <div className={`p-3 rounded-xl ${colors.iconBg}`}>
+                    <Icon className={`h-6 w-6 ${colors.iconColor}`} />
+                  </div>
+                  <div className="flex items-center gap-1 text-right">
+                    <CheckCircle className={`h-4 w-4 ${colors.changeColor}`} />
+                  </div>
+                </div>
+                
+                <div className="space-y-1">
+                  <h3 className={`text-sm font-medium ${colors.textColor}`}>
+                    {stat.title}
+                  </h3>
+                  <div className={`text-3xl font-bold ${colors.valueColor}`}>
+                    {stat.value}
+                  </div>
+                  <p className={`text-xs ${colors.changeColor}`}>
+                    {stat.change}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       {/* Search and Filters */}

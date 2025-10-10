@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if bike exists and is at the source station
+    // Check if bike exists and is at the source location
     const bikeCheckQuery = `
       SELECT 
         b.BikeID, 
@@ -31,11 +31,11 @@ export async function POST(request: NextRequest) {
         b.Model,
         b.CurrentStatus,
         b.LocationID,
-        s1.StationName as CurrentStationName,
-        s2.StationName as DestinationStationName
+        l1.LocationName as CurrentStationName,
+        l2.LocationName as DestinationStationName
       FROM bike b
-      LEFT JOIN station s1 ON b.LocationID = s1.StationID
-      LEFT JOIN station s2 ON s2.StationID = ?
+      LEFT JOIN location l1 ON b.LocationID = l1.LocationID
+      LEFT JOIN location l2 ON l2.LocationID = ?
       WHERE b.BikeID = ?
     `;
 
@@ -72,16 +72,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check destination station capacity
+    // Check destination location capacity
     const capacityCheckQuery = `
       SELECT 
-        s.StationName,
-        s.Capacity,
+        l.LocationName as StationName,
+        l.Capacity,
         COUNT(b.BikeID) as CurrentCount
-      FROM station s
-      LEFT JOIN bike b ON s.StationID = b.LocationID AND b.CurrentStatus IN ('Available', 'Rented')
-      WHERE s.StationID = ?
-      GROUP BY s.StationID, s.StationName, s.Capacity
+      FROM location l
+      LEFT JOIN bike b ON l.LocationID = b.LocationID AND b.CurrentStatus IN ('Available', 'Rented')
+      WHERE l.LocationID = ?
+      GROUP BY l.LocationID, l.LocationName, l.Capacity
     `;
 
     const capacityResult = await executeQuery(prisma, capacityCheckQuery, [ToStationID]);
@@ -98,24 +98,21 @@ export async function POST(request: NextRequest) {
 
     // Create movement record
     const insertMovementQuery = `
-      INSERT INTO bike_movement (
+      INSERT INTO bikemovement (
         BikeID,
-        FromStationID,
-        ToStationID,
+        FromLocationID,
+        ToLocationID,
         MovementDate,
-        StaffName,
-        Status,
-        Reason,
+        StaffID,
         Notes
-      ) VALUES (?, ?, ?, NOW(), 'Staff Request', 'Scheduled', ?, ?)
+      ) VALUES (?, ?, ?, NOW(), 1, ?)
     `;
 
     const movementValues = [
       BikeID,
-      FromStationID,
-      ToStationID,
-      Reason,
-      Notes || null
+      FromStationID, // This will be treated as FromLocationID
+      ToStationID,   // This will be treated as ToLocationID
+      `${Reason}${Notes ? ': ' + Notes : ''}`
     ];
 
     const insertResult = await executeQuery(prisma, insertMovementQuery, movementValues);

@@ -51,8 +51,8 @@ export async function GET(request: NextRequest) {
         b.BikeSerialNumber,
         b.Model as BikeModel,
         b.BikeType,
-        s.StationName,
-        s.Location as StationLocation,
+        l.LocationName as StationName,
+        l.Address as StationLocation,
         ${includeCustomerInfo ? `
         c.FirstName,
         c.LastName,
@@ -60,14 +60,13 @@ export async function GET(request: NextRequest) {
         c.PhoneNumber,
         CONCAT(c.FirstName, ' ', c.LastName) as CustomerName,
         ` : ''}
-        CASE WHEN rec.ReceiptID IS NOT NULL THEN 1 ELSE 0 END as ReceiptGenerated,
-        rec.ReceiptNumber,
-        rec.GeneratedDate as ReceiptGeneratedDate
+        0 as ReceiptGenerated,
+        NULL as ReceiptNumber,
+        NULL as ReceiptGeneratedDate
       FROM rental r
       JOIN bike b ON r.BikeID = b.BikeID
-      LEFT JOIN station s ON b.LocationID = s.StationID
-      ${includeCustomerInfo ? 'JOIN customer c ON r.CustomerID = c.CustomerID' : ''}
-      LEFT JOIN receipt rec ON r.RentalID = rec.RentalID
+      LEFT JOIN location l ON b.LocationID = l.LocationID
+      ${includeCustomerInfo ? 'JOIN user c ON r.CustomerID = c.UserID' : ''}
       ${whereClause}
       ORDER BY r.RentalStart DESC
       LIMIT ? OFFSET ?
@@ -123,9 +122,8 @@ export async function GET(request: NextRequest) {
       SELECT COUNT(*) as total
       FROM rental r
       JOIN bike b ON r.BikeID = b.BikeID
-      LEFT JOIN station s ON b.LocationID = s.StationID
-      ${includeCustomerInfo ? 'JOIN customer c ON r.CustomerID = c.CustomerID' : ''}
-      LEFT JOIN receipt rec ON r.RentalID = rec.RentalID
+      LEFT JOIN location l ON b.LocationID = l.LocationID
+      ${includeCustomerInfo ? 'JOIN user c ON r.CustomerID = c.UserID' : ''}
       ${whereClause.replace('LIMIT ? OFFSET ?', '')}
     `;
 
