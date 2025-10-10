@@ -84,7 +84,6 @@ function HeroSection() {
       y: 0,
       transition: {
         duration: 0.8,
-        ease: [0.4, 0.0, 0.2, 1],
       },
     },
   };
@@ -97,14 +96,12 @@ function HeroSection() {
       transition: {
         duration: 0.6,
         delay: 0.8,
-        ease: [0.4, 0.0, 0.2, 1],
       },
     },
     hover: {
       scale: 1.05,
       transition: {
         duration: 0.2,
-        ease: [0.4, 0.0, 0.2, 1],
       },
     },
   };
@@ -116,7 +113,6 @@ function HeroSection() {
       y: 0,
       transition: {
         duration: 0.5,
-        ease: [0.4, 0.0, 0.2, 1],
       },
     },
     exit: {
@@ -125,7 +121,6 @@ function HeroSection() {
       y: -20,
       transition: {
         duration: 0.3,
-        ease: [0.4, 0.0, 0.2, 1],
       },
     },
   };
@@ -335,8 +330,7 @@ function TestimonialsCarousel() {
   return (
     <section 
       id="testimonials" 
-      className="relative py-20 bg-cover bg-center bg-no-repeat"
-      style={{ backgroundImage: `url('/assets/images/cover/cover-7.webp')` }}
+      className="relative py-20 bg-cover bg-center bg-no-repeat bg-[url('/assets/images/cover/cover-7.webp')]"
     >
       {/* Background Overlay */}
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
