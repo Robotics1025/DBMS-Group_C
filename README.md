@@ -52,6 +52,33 @@ Administrators: Have full system access to generate reports, manage all data, ma
 - MySQL server 
 - Git
 
+## Installation (development)
+
+Clone the repository:
+
+git clone <git@github.com:Robotics1025/DBMS-Group_C.git>
+
+cd DBMS-Group_C
+
+## Install dependencies for the Next.js app:
+
+cd bike_rent
+npm install
+
+## Create an environment file:
+
+create bike_rent/.env and add variables as shown below.
+
+Environment variables
+Create bike_rent/.env and set at minimum:
+
+DATABASE_URL — e.g.:
+DATABASE_URL="mysql://USER:PASSWORD@HOST:3306/DATABASE_NAME"
+NEXT_PUBLIC_BASE_URL — e.g.:
+NEXT_PUBLIC_BASE_URL="http://localhost:3000"
+(Optional) NEXTAUTH_URL, NEXTAUTH_SECRET if you use NextAuth or other auth providers.
+
+
 # 🗄️ Core Entities & Database Schema
 
 The system is built around the following key entities and their relationships:
