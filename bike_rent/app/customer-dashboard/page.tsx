@@ -50,7 +50,7 @@ export default function CustomerDashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [brandFilter, setBrandFilter] = useState<string[]>([]);
-  const [priceRange, setPriceRange] = useState<number[]>([0, 3000]);
+    const [priceRange, setPriceRange] = useState([0, 100]);
   const [sortBy, setSortBy] = useState<string>("popular");
   const [favorites, setFavorites] = useState<string[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
@@ -77,23 +77,30 @@ export default function CustomerDashboard() {
         if (!response.ok) {
           throw new Error('Failed to fetch bikes');
         }
-        const data = await response.json();
+        const result = await response.json();
+        
+        // Check if the API response has the expected structure
+        if (!result.success || !Array.isArray(result.bikes)) {
+          throw new Error('Invalid API response structure');
+        }
         
         // Transform API data to match our interface
-        const transformedBikes: Bike[] = data.map((bike: any) => ({
-          id: bike.BikeID || bike.id,
-          name: bike.Model || bike.name || 'Bike',
-          type: bike.Type || 'City',
-          brand: bike.Brand || 'Unknown',
-          price: parseFloat(bike.PricePerHour || '10') * 24, // Convert hourly to daily price
-          hourlyRate: parseFloat(bike.PricePerHour || '10'),
-          rating: 4.0, // Default rating since not in schema
-          reviews: 0, // Default reviews since not in schema
-          location: bike.station?.Name || bike.Station || 'Unknown Location',
-          image: bike.ImageURL || '/bike.jpg',
+        const transformedBikes: Bike[] = result.bikes.map((bike: any) => ({
+          id: bike.BikeID?.toString() || 'unknown',
+          name: bike.Model || 'Bike',
+          type: bike.BikeType || 'City',
+          brand: 'BikeRental', // Default brand since not in API
+          price: Math.round((bike.RentalRatePerMinute || 5) / 10), // Use rate/10 as daily price (30 for rate 300)
+          hourlyRate: Math.round((bike.RentalRatePerMinute || 5) / 50), // Use rate/50 as hourly price (6 for rate 300)
+          rating: 4.0 + Math.random(), // Random rating between 4-5
+          reviews: Math.floor(Math.random() * 100) + 10, // Random review count
+          location: bike.StationName || 'Station',
+          image: bike.bike_image || '/bike.jpg',
           available: bike.Status === 'Available',
-          description: `${bike.Brand} ${bike.Model}`,
-          features: []
+          description: `${bike.BikeType} ${bike.Model}`,
+          features: bike.BikeType === 'Electric' ? ['Electric Motor', 'Long Range'] : ['Lightweight', 'Durable'],
+          battery: bike.BikeType === 'Electric' ? 85 + Math.floor(Math.random() * 15) : undefined,
+          range: bike.BikeType === 'Electric' ? 40 + Math.floor(Math.random() * 20) : undefined
         }));
         
         setBikes(transformedBikes);
@@ -212,27 +219,7 @@ export default function CustomerDashboard() {
                   />
                 </div>
                 
-                {/* Quick Actions in Search Area */}
-                <div className="flex items-center gap-2">
-                  {bikes.length > 0 && (
-                    <>
-                      <Link href={`/customer-dashboard/bike/${bikes[0].id}`}>
-                        <Button variant="outline" size="sm" className="border-orange-200 text-orange-600 hover:bg-orange-50">
-                          <MapPin className="h-4 w-4 mr-1" />
-                          View Details
-                        </Button>
-                      </Link>
-                      <Button 
-                        size="sm" 
-                        className="bg-orange-500 hover:bg-orange-600 text-white"
-                        onClick={() => window.location.href = `/customer-dashboard/bike/${bikes[0].id}`}
-                      >
-                        <Clock className="h-4 w-4 mr-1" />
-                        Rent Now
-                      </Button>
-                    </>
-                  )}
-                </div>
+              
               </div>
             </div>
 
@@ -337,7 +324,7 @@ export default function CustomerDashboard() {
         {/* Promotional Carousel */}
         <div className="mb-6 relative overflow-hidden rounded-xl">
           <div 
-            className={`flex transition-transform duration-500 ease-in-out`}
+            className="flex transition-transform duration-500 ease-in-out"
             style={{ transform: `translateX(-${currentAdIndex * 100}%)` }}
           >
             <div className="min-w-full bg-gradient-to-r from-blue-600 to-purple-700 p-8 text-white flex items-center justify-between">
@@ -457,9 +444,9 @@ export default function CustomerDashboard() {
                     <Slider
                       value={priceRange}
                       onValueChange={setPriceRange}
-                      max={3000}
+                      max={100}
                       min={0}
-                      step={100}
+                      step={5}
                       className="w-full"
                     />
                     <div className="flex justify-between text-sm text-gray-600">
@@ -570,6 +557,9 @@ export default function CustomerDashboard() {
                         src={bike.image}
                         alt={bike.name}
                         className="w-full h-56 object-cover group-hover:scale-105 transition-transform duration-300"
+                        onError={(e) => {
+                          e.currentTarget.src = '/bike.jpg';
+                        }}
                       />
                       <div className="absolute top-3 left-3">
                         {bike.discount && (
@@ -620,10 +610,11 @@ export default function CustomerDashboard() {
                       </div>
 
                       <div className="flex items-center gap-2 mb-3">
-                        <span className="font-bold text-lg text-orange-600">${bike.price}</span>
+                        <span className="font-bold text-lg text-orange-600">${bike.price.toLocaleString()}</span>
                         {bike.originalPrice && (
-                          <span className="text-sm text-gray-500 line-through">${bike.originalPrice}</span>
+                          <span className="text-sm text-gray-500 line-through">${bike.originalPrice.toLocaleString()}</span>
                         )}
+                        <span className="text-xs text-gray-500">/day</span>
                       </div>
 
                       <div className="flex items-center text-xs text-gray-500 mb-2">
@@ -632,7 +623,7 @@ export default function CustomerDashboard() {
                       </div>
 
                       <div className="text-xs text-gray-600 mb-3">
-                        ${bike.hourlyRate}/hour {bike.battery && `• ${bike.battery}% battery`}
+                        ${bike.hourlyRate.toLocaleString()}/hour {bike.battery && `• ${bike.battery}% battery`}
                       </div>
                     </Link>
 
@@ -649,6 +640,35 @@ export default function CustomerDashboard() {
                   </CardContent>
                 </Card>
               ))
+              )}
+              
+              {/* Empty State */}
+              {!loading && filteredBikes.length === 0 && (
+                <div className="col-span-full flex flex-col items-center justify-center py-16 text-center">
+                  <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                    <Search className="h-12 w-12 text-gray-400" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">No bikes found</h3>
+                  <p className="text-gray-500 mb-6 max-w-md">
+                    {searchTerm || typeFilter !== "all" || brandFilter.length > 0 
+                      ? "Try adjusting your filters or search terms to find more bikes."
+                      : "There are no bikes available at the moment. Please check back later."
+                    }
+                  </p>
+                  {(searchTerm || typeFilter !== "all" || brandFilter.length > 0) && (
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        setSearchTerm("");
+                        setTypeFilter("all");
+                        setBrandFilter([]);
+                        setPriceRange([0, 500]);
+                      }}
+                    >
+                      Clear All Filters
+                    </Button>
+                  )}
+                </div>
               )}
             </div>
 

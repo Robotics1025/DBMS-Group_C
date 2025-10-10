@@ -124,8 +124,8 @@ export default function Analytics() {
                 {day: "Sat", rentals: Math.floor(business.average_daily_rentals * 1.3) || 0, completed: Math.floor(business.average_daily_rentals * 1.25) || 0},
                 {day: "Sun", rentals: Math.floor(business.average_daily_rentals * 1.05) || 0, completed: Math.floor(business.average_daily_rentals * 1.0) || 0}
               ],
-              stations: locations.slice(0, 5).map((location: any) => ({
-                name: location.location_name || 'Unknown',
+              stations: locations.slice(0, 5).map((location: any, index: number) => ({
+                name: location.location_name || `Location ${index + 1}`,
                 utilization: Math.min(100, Math.max(0, (location.total_rentals || 0) / 10)),
                 revenue: location.total_revenue || 0
               })),
@@ -470,7 +470,7 @@ export default function Analytics() {
                 {data.chartData.revenue.map((item, index) => {
                   const height = (item.revenue / Math.max(...data.chartData.revenue.map(d => d.revenue))) * 100;
                   return (
-                    <div key={item.month} className="flex-1 flex flex-col items-center">
+                    <div key={`revenue-${index}-${item.month}`} className="flex-1 flex flex-col items-center">
                       <div className="text-xs font-medium text-green-600 mb-1 print:text-black">
                         ${(item.revenue / 1000).toFixed(0)}k
                       </div>
@@ -606,7 +606,7 @@ export default function Analytics() {
           <CardContent className="p-6 relative z-10 print:p-4">
             <div className="space-y-4">
               {data.chartData.stations.map((station, index) => (
-                <div key={station.name} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 print:bg-gray-100">
+                <div key={`station-${index}-${station.name}`} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 print:bg-gray-100">
                   <div className="flex items-center gap-3">
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm ${
                       index === 0 ? 'bg-yellow-500' :
@@ -666,7 +666,7 @@ export default function Analytics() {
                   {data.chartData.users.map((item, index) => {
                     const width = (item.active / Math.max(...data.chartData.users.map(d => d.active))) * 100;
                     return (
-                      <div key={item.month} className="flex items-center gap-3">
+                      <div key={`users-${index}-${item.month}`} className="flex items-center gap-3">
                         <div className="w-8 text-xs font-medium print:text-black">{item.month}</div>
                         <div className="flex-1 bg-muted/30 rounded-full h-6 relative print:bg-gray-200">
                           <div 

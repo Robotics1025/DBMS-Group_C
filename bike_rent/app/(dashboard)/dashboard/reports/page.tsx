@@ -15,7 +15,7 @@ import Image from "next/image";
 interface ReportData {
   type: string;
   title: string;
-  data: any[];
+  data: any[] | Record<string, any>;
   summary?: any;
   generated_at: string;
 }
@@ -107,14 +107,16 @@ export default function AdminReports() {
     // Handle different report types with specific formatting
     switch (reportData.type) {
       case 'business-summary':
+        // Ensure reportData.data is treated as an object, not array
+        const summaryData = reportData.data as Record<string, any>;
         return (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {[
-                { label: 'Total Revenue', value: `$${reportData.data.total_revenue?.toLocaleString() || '0'}`, color: 'text-green-600' },
-                { label: 'Total Rentals', value: reportData.data.total_rentals?.toLocaleString() || '0', color: 'text-blue-600' },
-                { label: 'Total Customers', value: reportData.data.total_customers?.toLocaleString() || '0', color: 'text-purple-600' },
-                { label: 'Avg Daily Revenue', value: `$${reportData.data.average_daily_revenue?.toLocaleString() || '0'}`, color: 'text-orange-600' }
+                { label: 'Total Revenue', value: `$${summaryData.total_revenue?.toLocaleString() || '0'}`, color: 'text-green-600' },
+                { label: 'Total Rentals', value: summaryData.total_rentals?.toLocaleString() || '0', color: 'text-blue-600' },
+                { label: 'Total Customers', value: summaryData.total_customers?.toLocaleString() || '0', color: 'text-purple-600' },
+                { label: 'Avg Daily Revenue', value: `$${summaryData.average_daily_revenue?.toLocaleString() || '0'}`, color: 'text-orange-600' }
               ].map((metric, index) => (
                 <div key={index} className="p-4 bg-gradient-to-br from-white to-gray-50 rounded-lg border">
                   <div className={`text-2xl font-bold ${metric.color}`}>{metric.value}</div>
@@ -125,6 +127,7 @@ export default function AdminReports() {
           </div>
         );
 
+        
       case 'locations':
         return (
           <div className="space-y-4">

@@ -1,43 +1,76 @@
-import { NextRequest, NextResponse } from 'next/server';// Analytics Dashboard API// Analytics Dashboard API
+// Analytics Dashboard API// Analytics Dashboard API
 
-import { PrismaClient } from '@/app/generated/prisma';
+import { NextRequest, NextResponse } from 'next/server';import { NextRequest, NextResponse } from 'next/server';
 
-import { bikeQueries, rentalQueries, userQueries, executeQuery } from '@/lib/queries';import { NextRequest, NextResponse } from 'next/server';import { NextRequest, NextResponse } from 'next/server';
+import { PrismaClient } from '@/app/generated/prisma';import { PrismaClient } from '@/app/generated/prisma';
 
-
-
-const prisma = new PrismaClient();import { PrismaClient } from '@/app/generated/prisma';import { PrismaClient } from '@/app/generated/prisma';
+import { bikeQueries, rentalQueries, userQueries, executeQuery } from '@/lib/queries';import { bikeQueries, rentalQueries, userQueries, executeQuery } from '@/lib/queries';
 
 
 
-export async function GET(request: NextRequest) {import { bikeQueries, rentalQueries, userQueries, executeQuery } from '@/lib/queries';import { bikeQueries, rentalQueries, userQueries, executeQuery } from '@/lib/queries';
+const prisma = new PrismaClient();const prisma = new PrismaClient();
 
-  try {
 
-    const bikesResult = await executeQuery(prisma, bikeQueries.getAllBikes);
+
+// Get dashboard overview statistics
+
+export async function GET(request: NextRequest) {
+
+  try {export async function GET(request: NextRequest) {import { bikeQueries, rentalQueries, userQueries, executeQuery } from '@/lib/queries';import { bikeQueries, rentalQueries, userQueries, executeQuery } from '@/lib/queries';
+
+    // Simple analytics using existing queries
+
+    const bikesResult = await executeQuery(prisma, bikeQueries.getAllBikes);  try {
 
     const rentalsResult = await executeQuery(prisma, rentalQueries.getAllActiveRentals);
 
-    const customersResult = await executeQuery(prisma, userQueries.getAllCustomers);const prisma = new PrismaClient();const prisma = new PrismaClient();
+    const customersResult = await executeQuery(prisma, userQueries.getAllCustomers);    const bikesResult = await executeQuery(prisma, bikeQueries.getAllBikes);
 
 
 
-    const analytics = {
+    const analytics = {    const rentalsResult = await executeQuery(prisma, rentalQueries.getAllActiveRentals);
 
       totalBikes: bikesResult.data?.length || 0,
 
-      activeRentals: rentalsResult.data?.length || 0,// Get dashboard overview statistics// Get dashboard overview statistics
+      activeRentals: rentalsResult.data?.length || 0,    const customersResult = await executeQuery(prisma, userQueries.getAllCustomers);const prisma = new PrismaClient();const prisma = new PrismaClient();
 
       totalCustomers: customersResult.data?.length || 0,
 
-      availableBikes: bikesResult.data?.filter((bike: any) => bike.CurrentStatus === 'Available').length || 0export async function GET(request: NextRequest) {export async function GET(request: NextRequest) {
+      availableBikes: bikesResult.data?.filter((bike: any) => bike.CurrentStatus === 'Available').length || 0
 
     };
 
-  try {  try {
+    const analytics = {
 
     return NextResponse.json({
 
+      success: true,      totalBikes: bikesResult.data?.length || 0,
+
+      data: analytics
+
+    });      activeRentals: rentalsResult.data?.length || 0,// Get dashboard overview statistics// Get dashboard overview statistics
+
+
+
+  } catch (error) {      totalCustomers: customersResult.data?.length || 0,
+
+    console.error('Analytics API error:', error);
+
+    return NextResponse.json(      availableBikes: bikesResult.data?.filter((bike: any) => bike.CurrentStatus === 'Available').length || 0export async function GET(request: NextRequest) {export async function GET(request: NextRequest) {
+
+      { error: 'Failed to fetch analytics data' },
+
+      { status: 500 }    };
+
+    );
+
+  } finally {  try {  try {
+
+    await prisma.$disconnect();
+
+  }    return NextResponse.json({
+
+}
       success: true,    // Simple analytics using existing queries    // Simple analytics using existing queries
 
       data: analytics

@@ -517,7 +517,7 @@ export const salesReportQueries = {
     SELECT 
       YEAR(r.RentalStart) as SalesYear,
       MONTH(r.RentalStart) as SalesMonth,
-      MONTHNAME(r.RentalStart) as MonthName,
+      DATE_FORMAT(r.RentalStart, '%M') as MonthName,
       COUNT(r.RentalID) as TotalRentals,
       SUM(CASE WHEN r.PaymentStatus = 'Paid' THEN r.TotalCost ELSE 0 END) as TotalRevenue,
       AVG(CASE WHEN r.PaymentStatus = 'Paid' AND r.RentalEnd IS NOT NULL THEN 
@@ -527,7 +527,7 @@ export const salesReportQueries = {
       AVG(CASE WHEN r.PaymentStatus = 'Paid' THEN r.TotalCost ELSE NULL END) as AvgRevenuePerRental
     FROM rental r
     WHERE r.RentalStart >= DATE_SUB(CURDATE(), INTERVAL ? MONTH)
-    GROUP BY YEAR(r.RentalStart), MONTH(r.RentalStart)
+    GROUP BY YEAR(r.RentalStart), MONTH(r.RentalStart), DATE_FORMAT(r.RentalStart, '%M')
     ORDER BY SalesYear DESC, SalesMonth DESC
   `,
 
@@ -548,7 +548,7 @@ export const salesReportQueries = {
       MIN(CASE WHEN r.PaymentStatus = 'Paid' AND r.TotalCost > 0 THEN r.TotalCost ELSE NULL END) as LowestSingleRental
     FROM rental r
     WHERE r.RentalStart >= DATE_SUB(CURDATE(), INTERVAL ? QUARTER)
-    GROUP BY YEAR(r.RentalStart), QUARTER(r.RentalStart)
+    GROUP BY YEAR(r.RentalStart), QUARTER(r.RentalStart), CONCAT('Q', QUARTER(r.RentalStart), ' ', YEAR(r.RentalStart))
     ORDER BY SalesYear DESC, SalesQuarter DESC
   `,
 
@@ -681,7 +681,7 @@ export const salesReportQueries = {
       DATE_FORMAT(r.RentalStart, '%Y-%m') as MonthYear,
       YEAR(r.RentalStart) as Year,
       MONTH(r.RentalStart) as Month,
-      MONTHNAME(r.RentalStart) as MonthName,
+      DATE_FORMAT(r.RentalStart, '%M') as MonthName,
       COUNT(r.RentalID) as TotalRentals,
       SUM(CASE WHEN r.PaymentStatus = 'Paid' THEN r.TotalCost ELSE 0 END) as TotalRevenue,
       AVG(CASE WHEN r.PaymentStatus = 'Paid' THEN r.TotalCost ELSE NULL END) as AvgRevenuePerRental,
@@ -696,7 +696,7 @@ export const salesReportQueries = {
        OVER (ORDER BY YEAR(r.RentalStart), MONTH(r.RentalStart)), 0) * 100 as MonthOverMonthGrowthPercent
     FROM rental r
     WHERE r.RentalStart >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
-    GROUP BY YEAR(r.RentalStart), MONTH(r.RentalStart)
+    GROUP BY YEAR(r.RentalStart), MONTH(r.RentalStart), DATE_FORMAT(r.RentalStart, '%Y-%m'), DATE_FORMAT(r.RentalStart, '%M')
     ORDER BY Year DESC, Month DESC
   `,
 
