@@ -99,6 +99,22 @@ Start:
 npm start
 For production deployments, consider using Vercel, Netlify (for frontend), or a Node process manager (PM2) and a managed MySQL instance.
 
+## Documentation & ERD
+
+Key documentation lives in the `Documentation/` folder:
+
+- ERD: [Documentation/ERD-Bike_Rental_DBMS(GROUP_C).pdf]
+(Documentation/ERD-Bike_Rental_DBMS(GROUP_C).pdf)
+
+- Data dictionaries: [Documentation/Bike_Rental_Data_Dictionary[2].docx](Documentation/Bike_Rental_Data_Dictionary%5B2%5D.docx)
+
+- SDLC & Use-cases: [Documentation/SDLC-Bike-Rental_DBMS(GROUP_C).pdf](Documentation/SDLC-Bike-Rental_DBMS(GROUP_C).pdf)
+
+Link to SQL scripts (in `SQL-Scripts/`):
+
+- [SQL-Scripts/bike-rental-seed.sql](SQL-Scripts/bike-rental-seed.sql)
+
+- [SQL-Scripts/bike-rental-data.dump.sql](SQL-Scripts/bike-rental-data.dump.sql)
 
 # 🗄️ Core Entities & Database Schema
 
@@ -194,14 +210,13 @@ npx prisma db pull → Pull existing schema
 npx prisma generate → Generate Prisma client
 
 npx prisma studio → Explore DB
-=======
+
 Backend: (Proposed) 
 
 Frontend: (Proposed) HTML, CSS, JavaScript, React
 
 
 
->>>>>>> 3c66385 (the frontend)
 
 ## High level Project structure 
 
