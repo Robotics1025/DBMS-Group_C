@@ -218,20 +218,19 @@ Frontend: (Proposed) HTML, CSS, JavaScript, React
 
 
 
-## High level Project structure 
+## High level Project structure
 
+```
 bike_rent/
-    app/ — Next.js app (routes, pages, layouts)
-    components/ — React components
-    prisma/ — Prisma schema & migrations
-    public/ — static assets (images, svg)
-    package.json — scripts & dependencies
-    next.config.ts, tsconfig.json, etc.
-Documentation/ — ERD, data dictionary, SDLC, use cases (PDF/DOCX)
-
-SQL-Scripts
-
-README.md — this file
+├── app/               # Next.js App Router (routes, pages, layouts)
+├── components/        # Reusable React components
+├── prisma/            # Prisma schema, migrations, and database connection logic
+├── public/            # Static assets (images, logos, etc.)
+├── Documentation/     # 📚 Project artifacts (ERD, data dictionary, SDLC, use cases)
+├── SQL-Scripts/       # 💾 Raw SQL files (schema definition, sample data)
+├── package.json       # Project dependencies and scripts
+└── README.md          # This file
+```
 
 
 ## 👨‍💻 Development Team (Group C)
