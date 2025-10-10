@@ -5,9 +5,7 @@
 A comprehensive Database Management System designed to streamline the operations of a modern bike rental business. This system facilitates bike rentals, returns, customer management, payment processing, and detailed reporting.
 
 
-
-
-##  🎯 Purpose & Scope
+## 🎯 Purpose & Scope
 
 The primary purpose of this DBMS is to effectively manage all core operations of a bike rental service, including:
 
@@ -15,12 +13,11 @@ Bike Management: Tracking inventory, status, and location of all bicycles.
 
 Customer Management: Handling customer registrations, profiles, and rental history.
 
-Rental/Return Processing: Managing the complete lifecycle of a rental transaction.
+Rental/Return Processing: Managing the complete lifecycle of a rental transacti
 
 Payment Processing: Recording transactions via multiple payment methods.
 
 Reporting: Generating insights into revenue, bike usage, and business performance.
-
 
 
 
@@ -35,7 +32,89 @@ Staff: Can process rentals and returns, manage bike inventory, check bike condit
 Administrators: Have full system access to generate reports, manage all data, manage staff accounts, and configure rental locations.
 
 
+## Table of Contents
 
+- Prerequisites
+- Installation (development)
+- Environment variables
+- Database setup & seeding
+- Run (development & production)
+- Prisma quick reference
+- Project structure
+- Testing & linting
+- Contributing
+- Documentation & ERD
+- Maintainers
+
+## Prerequisites
+
+- Node.js v18+ 
+- MySQL server 
+- Git
+
+## Installation (development)
+
+Clone the repository:
+
+git clone <git@github.com:Robotics1025/DBMS-Group_C.git>
+
+cd DBMS-Group_C
+
+## Install dependencies for the Next.js app:
+
+cd bike_rent
+npm install
+
+## Create an environment file:
+
+create bike_rent/.env and add variables as shown below.
+
+Environment variables
+Create bike_rent/.env and set at minimum:
+
+DATABASE_URL — e.g.:
+DATABASE_URL="mysql://USER:PASSWORD@HOST:3306/DATABASE_NAME"
+NEXT_PUBLIC_BASE_URL — e.g.:
+NEXT_PUBLIC_BASE_URL="http://localhost:3000"
+(Optional) NEXTAUTH_URL, NEXTAUTH_SECRET if you use NextAuth or other auth providers.
+
+## Database setup & seeding
+This project includes Prisma and SQL scripts for initializing or populating the database.
+
+From project root:
+
+mysql -u root -p bike_rental_db < "SQL-Scripts/bike-rental-seed.sql"
+
+## Run the app
+Development
+
+From bike_rent:
+npm run dev
+
+## Build & Production
+
+Build:
+npm run build
+Start:
+npm start
+For production deployments, consider using Vercel, Netlify (for frontend), or a Node process manager (PM2) and a managed MySQL instance.
+
+## Documentation & ERD
+
+Key documentation lives in the `Documentation/` folder:
+
+- ERD: [Documentation/ERD-Bike_Rental_DBMS(GROUP_C).pdf]
+(Documentation/ERD-Bike_Rental_DBMS(GROUP_C).pdf)
+
+- Data dictionaries: [Documentation/Bike_Rental_Data_Dictionary[2].docx](Documentation/Bike_Rental_Data_Dictionary%5B2%5D.docx)
+
+- SDLC & Use-cases: [Documentation/SDLC-Bike-Rental_DBMS(GROUP_C).pdf](Documentation/SDLC-Bike-Rental_DBMS(GROUP_C).pdf)
+
+Link to SQL scripts (in `SQL-Scripts/`):
+
+- [SQL-Scripts/bike-rental-seed.sql](SQL-Scripts/bike-rental-seed.sql)
+
+- [SQL-Scripts/bike-rental-data.dump.sql](SQL-Scripts/bike-rental-data.dump.sql)
 
 # 🗄️ Core Entities & Database Schema
 
@@ -131,33 +210,27 @@ npx prisma db pull → Pull existing schema
 npx prisma generate → Generate Prisma client
 
 npx prisma studio → Explore DB
-=======
+
 Backend: (Proposed) 
 
 Frontend: (Proposed) HTML, CSS, JavaScript, React
 
 
 
->>>>>>> 3c66385 (the frontend)
-## 📁 Repository Structure
 
+## High level Project structure
 
-DBMS-Bike-Rental_Group_C/
-
-├── Documentation/
-
-│ └── SDLC-Bike-Rental_DBMS(GROUP_C).pdf
-
-├── Database/
-
-│ ├── Schema/
-
-│ └── Sample_Data/
-
-├── Source_Code/
-
-└── README.md
-
+```
+bike_rent/
+├── app/               # Next.js App Router (routes, pages, layouts)
+├── components/        # Reusable React components
+├── prisma/            # Prisma schema, migrations, and database connection logic
+├── public/            # Static assets (images, logos, etc.)
+├── Documentation/     # 📚 Project artifacts (ERD, data dictionary, SDLC, use cases)
+├── SQL-Scripts/       # 💾 Raw SQL files (schema definition, sample data)
+├── package.json       # Project dependencies and scripts
+└── README.md          # This file
+```
 
 
 ## 👨‍💻 Development Team (Group C)
@@ -171,8 +244,7 @@ Mugole Joel - (GitHub: Robotics1025)
 
 Kigozi Allan - (GitHub:)
 
-<<<<<<< HEAD
 Nalubega Shadia - (GitHub:)
-=======
-Nalubega Shadia - (GitHub:)
->>>>>>> 3c66385 (the frontend)
+
+
+
