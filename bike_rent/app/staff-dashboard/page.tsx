@@ -5,9 +5,9 @@ import {
   MapPin, Battery, Wrench, AlertTriangle, CheckCircle, Clock, 
   Users, Bike, DollarSign, TrendingUp, Search, Filter, Plus,
   MoreHorizontal, Edit, Trash2, Eye, Bell, User, LogOut,
-  CreditCard, Receipt, ArrowUpDown, Calendar
+  CreditCard, Receipt, ArrowUpDown, Calendar, Activity, BarChart3
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,7 @@ import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import Link from "next/link";
+import Image from "next/image";
 
 interface DashboardStats {
   totalBikes: number;
@@ -192,177 +193,300 @@ export default function StaffDashboard() {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Welcome Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">
-            Welcome back, {user?.name?.split(' ')[0]}!
-          </h1>
-          <p className="text-gray-600 mt-1">
-            Here's what's happening at your station today.
-          </p>
+    <div className="space-y-6 relative min-h-screen">
+      {/* Enhanced Background Pattern */}
+      <div className="absolute inset-0 -z-10 overflow-hidden">
+        {/* Large shape in top-right */}
+        <div className="absolute top-0 right-0 w-80 h-80 opacity-[0.02] rotate-12 animate-pulse">
+          <Image 
+            src="/assets/background/shape-square.svg" 
+            alt="" 
+            fill 
+            className="object-contain"
+          />
         </div>
-        <div className="text-right">
-          <p className="text-sm text-gray-500">Today</p>
-          <p className="text-lg font-semibold text-gray-900">
-            {new Date().toLocaleDateString('en-US', { 
-              weekday: 'long', 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
-            })}
-          </p>
+        
+        {/* Medium shape in bottom-left */}
+        <div className="absolute bottom-20 left-10 w-60 h-60 opacity-[0.03] -rotate-45 animate-pulse delay-1000">
+          <Image 
+            src="/assets/background/shape-square.svg" 
+            alt="" 
+            fill 
+            className="object-contain"
+          />
+        </div>
+        
+        {/* Small shape in center */}
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-40 h-40 opacity-[0.015] rotate-90 animate-pulse delay-2000">
+          <Image 
+            src="/assets/background/shape-square.svg" 
+            alt="" 
+            fill 
+            className="object-contain"
+          />
+        </div>
+        
+        {/* Gradient overlay for depth */}
+        <div className="absolute inset-0 bg-gradient-to-br from-transparent via-background/50 to-background/20" />
+      </div>
+
+      {/* Header with Cool Background */}
+      <div className="relative bg-gradient-to-r from-blue-500/5 via-indigo-500/5 to-purple-500/5 rounded-2xl p-8 border backdrop-blur-sm overflow-hidden">
+        <div className="flex items-center justify-between relative z-10">
+          <div>
+            <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+              Staff Dashboard
+            </h1>
+            <p className="text-muted-foreground mt-2 text-lg">
+              Welcome back, {user?.name?.split(' ')[0]}! Manage operations efficiently
+            </p>
+          </div>
+          <div className="hidden md:block relative w-40 h-40">
+            <Image 
+              src="/assets/illustrations/illustration-dashboard.webp" 
+              alt="Staff Dashboard illustration" 
+              fill
+              className="object-contain"
+            />
+          </div>
+        </div>
+        
+        {/* Additional background shapes in header */}
+        <div className="absolute top-2 left-2 w-20 h-20 opacity-5 rotate-45">
+          <Image 
+            src="/assets/background/shape-square.svg" 
+            alt=""
+            fill
+            className="object-contain"
+          />
+        </div>
+        <div className="absolute bottom-2 right-2 w-16 h-16 opacity-5 -rotate-12">
+          <Image 
+            src="/assets/background/shape-square.svg" 
+            alt=""
+            fill
+            className="object-contain"
+          />
         </div>
       </div>
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="bg-gradient-to-r from-green-50 to-green-100 border-green-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-green-800">Available Bikes</p>
-                <p className="text-3xl font-bold text-green-900">
-                  {loading ? (
-                    <div className="animate-pulse bg-green-200 rounded w-16 h-8" />
-                  ) : (
-                    stats.availableBikes
-                  )}
-                </p>
-                <p className="text-xs text-green-600 mt-1">Ready for rental</p>
-              </div>
-              <div className="p-3 bg-green-200 rounded-full">
-                <Bike className="h-8 w-8 text-green-700" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-blue-800">Active Rentals</p>
-                <p className="text-3xl font-bold text-blue-900">
-                  {loading ? (
-                    <div className="animate-pulse bg-blue-200 rounded w-16 h-8" />
-                  ) : (
-                    stats.activeRentals
-                  )}
-                </p>
-                <p className="text-xs text-blue-600 mt-1">Currently rented</p>
-              </div>
-              <div className="p-3 bg-blue-200 rounded-full">
-                <Clock className="h-8 w-8 text-blue-700" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-r from-orange-50 to-orange-100 border-orange-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-orange-800">Maintenance</p>
-                <p className="text-3xl font-bold text-orange-900">
-                  {loading ? (
-                    <div className="animate-pulse bg-orange-200 rounded w-16 h-8" />
-                  ) : (
-                    stats.maintenanceBikes
-                  )}
-                </p>
-                <p className="text-xs text-orange-600 mt-1">Needs attention</p>
-              </div>
-              <div className="p-3 bg-orange-200 rounded-full">
-                <Wrench className="h-8 w-8 text-orange-700" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-r from-purple-50 to-purple-100 border-purple-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-purple-800">Today's Revenue</p>
-                <p className="text-3xl font-bold text-purple-900">
-                  {loading ? (
-                    <div className="animate-pulse bg-purple-200 rounded w-16 h-8" />
-                  ) : (
-                    `$${stats.todayRevenue.toFixed(2)}`
-                  )}
-                </p>
-                <p className="text-xs text-purple-600 mt-1">From completed rentals</p>
-              </div>
-              <div className="p-3 bg-purple-200 rounded-full">
-                <DollarSign className="h-8 w-8 text-purple-700" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {quickActions.map((action) => {
-          const Icon = action.icon;
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {[
+          {
+            title: "Available Bikes",
+            value: loading ? "..." : stats.availableBikes.toString(),
+            change: "Ready for rental",
+            icon: Bike,
+            colors: {
+              bg: "bg-gradient-to-br from-green-100 to-green-50",
+              iconBg: "bg-green-500",
+              iconColor: "text-white",
+              textColor: "text-green-700",
+              valueColor: "text-green-800",
+              changeColor: "text-green-600"
+            }
+          },
+          {
+            title: "Active Rentals",
+            value: loading ? "..." : stats.activeRentals.toString(),
+            change: "Currently rented",
+            icon: Clock,
+            colors: {
+              bg: "bg-gradient-to-br from-blue-100 to-blue-50",
+              iconBg: "bg-blue-500",
+              iconColor: "text-white",
+              textColor: "text-blue-700",
+              valueColor: "text-blue-800",
+              changeColor: "text-blue-600"
+            }
+          },
+          {
+            title: "Maintenance",
+            value: loading ? "..." : stats.maintenanceBikes.toString(),
+            change: "Needs attention",
+            icon: Wrench,
+            colors: {
+              bg: "bg-gradient-to-br from-orange-100 to-orange-50",
+              iconBg: "bg-orange-500",
+              iconColor: "text-white",
+              textColor: "text-orange-700",
+              valueColor: "text-orange-800",
+              changeColor: "text-orange-600"
+            }
+          },
+          {
+            title: "Today's Revenue",
+            value: loading ? "..." : `RM ${stats.todayRevenue.toFixed(2)}`,
+            change: "Completed rentals",
+            icon: DollarSign,
+            colors: {
+              bg: "bg-gradient-to-br from-purple-100 to-purple-50",
+              iconBg: "bg-purple-500",
+              iconColor: "text-white",
+              textColor: "text-purple-700",
+              valueColor: "text-purple-800",
+              changeColor: "text-purple-600"
+            }
+          }
+        ].map((stat, index) => {
+          const Icon = stat.icon;
+          const colors = stat.colors;
+          
           return (
-            <Link key={action.title} href={action.href}>
-              <Card className="hover:shadow-lg transition-shadow cursor-pointer group">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-4">
-                    <div className={`p-3 rounded-lg ${action.bgColor} group-hover:scale-110 transition-transform`}>
-                      <Icon className={`h-6 w-6 ${action.color}`} />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
-                        {action.title}
-                      </h3>
-                      <p className="text-sm text-gray-600 mt-1">
-                        {action.description}
-                      </p>
-                    </div>
+            <Card key={stat.title} className={`${colors.bg} border-0 hover:shadow-lg transition-all duration-300 overflow-hidden relative rounded-2xl`}>
+              {/* Dot Pattern Background */}
+              <div className="absolute inset-0 opacity-20">
+                <div className={`absolute inset-0 ${colors.textColor}`}>
+                  <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                      <pattern id={`dots-${index}`} x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                        <circle cx="10" cy="10" r="1" fill="currentColor"/>
+                      </pattern>
+                    </defs>
+                    <rect width="100%" height="100%" fill={`url(#dots-${index})`}/>
+                  </svg>
+                </div>
+              </div>
+              
+              {/* Shape Pattern */}
+              <div className="absolute top-4 right-4 w-16 h-16 opacity-10">
+                <Image 
+                  src="/assets/background/shape-square.svg" 
+                  alt=""
+                  fill
+                  className="object-contain"
+                />
+              </div>
+              
+              <CardContent className="p-6 relative z-10">
+                <div className="flex items-start justify-between mb-4">
+                  <div className={`p-3 rounded-xl ${colors.iconBg}`}>
+                    <Icon className={`h-6 w-6 ${colors.iconColor}`} />
                   </div>
-                </CardContent>
-              </Card>
-            </Link>
+                  <div className="flex items-center gap-1 text-right">
+                    <TrendingUp className={`h-4 w-4 ${colors.changeColor}`} />
+                    <span className={`text-sm font-medium ${colors.changeColor}`}>
+                      +{stat.change}
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="space-y-1">
+                  <h3 className={`text-sm font-medium ${colors.textColor}`}>
+                    {stat.title}
+                  </h3>
+                  <div className={`text-3xl font-bold ${colors.valueColor}`}>
+                    {stat.value}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           );
         })}
       </div>
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Recent Activity */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5" />
-              Recent Activity
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {mockRecentActivity.map((activity) => {
-                const Icon = getActivityIcon(activity.type);
-                return (
-                  <div key={activity.id} className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
-                    <div className={`p-2 rounded-full bg-white ${getActivityStatusColor(activity.status)}`}>
-                      <Icon className="h-4 w-4" />
+      {/* Quick Actions */}
+      <Card className="bg-gradient-to-br from-card to-card/50 backdrop-blur-sm relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-20 h-20 opacity-5">
+          <Image 
+            src="/assets/background/shape-square.svg" 
+            alt=""
+            fill
+            className="object-contain"
+          />
+        </div>
+        
+        <CardHeader className="bg-gradient-to-r from-indigo-500/5 to-blue-500/5 relative z-10">
+          <CardTitle className="flex items-center gap-2">
+            <Activity className="h-5 w-5 text-primary" />
+            Quick Actions
+          </CardTitle>
+          <CardDescription>
+            Common staff operations and tasks
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-6 relative z-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {quickActions.map((action) => {
+              const Icon = action.icon;
+              return (
+                <Link key={action.title} href={action.href}>
+                  <div className="group p-4 rounded-xl bg-gradient-to-br from-white to-gray-50 border hover:shadow-lg hover:scale-105 transition-all duration-300 cursor-pointer relative overflow-hidden">
+                    {/* Background Pattern */}
+                    <div className="absolute top-0 right-0 w-12 h-12 opacity-5">
+                      <Image 
+                        src="/assets/background/shape-square.svg" 
+                        alt=""
+                        fill
+                        className="object-contain"
+                      />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <h4 className="text-sm font-medium text-gray-900 truncate">
-                          {activity.title}
-                        </h4>
-                        <span className="text-xs text-gray-500">{activity.timestamp}</span>
+                    
+                    <div className="relative z-10">
+                      <div className={`p-3 rounded-lg ${action.bgColor} group-hover:scale-110 transition-transform mb-3 w-fit`}>
+                        <Icon className={`h-6 w-6 ${action.color}`} />
                       </div>
-                      <p className="text-sm text-gray-600 mt-1">
-                        {activity.description}
+                      <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors mb-1">
+                        {action.title}
+                      </h3>
+                      <p className="text-sm text-gray-600">
+                        {action.description}
                       </p>
                     </div>
                   </div>
-                );
-              })}
+                </Link>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Main Content Grid */}
+      <div className="grid gap-4 lg:grid-cols-3">
+        {/* Recent Activity */}
+        <Card className="lg:col-span-2 bg-gradient-to-br from-card to-card/50 backdrop-blur-sm">
+          <CardHeader className="bg-gradient-to-r from-primary/5 to-blue-500/5">
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="h-5 w-5 text-primary" />
+              Recent Activity
+            </CardTitle>
+            <CardDescription>
+              Latest operations and system events
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="space-y-4">
+              {mockRecentActivity.length === 0 ? (
+                <div className="text-center py-8">
+                  <Activity className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+                  <h3 className="text-sm font-medium text-muted-foreground mb-2">No recent activity</h3>
+                  <p className="text-xs text-muted-foreground">Staff operations will appear here</p>
+                </div>
+              ) : (
+                mockRecentActivity.map((activity) => {
+                  const Icon = getActivityIcon(activity.type);
+                  return (
+                    <div key={activity.id} className="flex items-start gap-4 p-3 rounded-lg hover:bg-muted/50 transition-colors border-b last:border-0">
+                      <div className={`p-2 rounded-full bg-background ring-2 ring-primary/20 ${getActivityStatusColor(activity.status)}`}>
+                        <Icon className="h-4 w-4" />
+                      </div>
+                      <div className="flex-1 min-w-0 space-y-1">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-sm font-medium leading-none truncate">
+                            {activity.title}
+                          </h4>
+                          <Badge variant="secondary" className="text-xs">
+                            {activity.timestamp}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {activity.description}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
             <div className="mt-4 pt-4 border-t">
               <Button variant="outline" className="w-full">
@@ -372,81 +496,221 @@ export default function StaffDashboard() {
           </CardContent>
         </Card>
 
-        {/* Today's Summary */}
-        <Card>
-          <CardHeader>
+        {/* Performance Summary */}
+        <Card className="bg-gradient-to-br from-card to-card/50 backdrop-blur-sm relative overflow-hidden">
+          {/* Background Pattern */}
+          <div className="absolute top-0 right-0 w-20 h-20 opacity-5">
+            <Image 
+              src="/assets/background/shape-square.svg" 
+              alt=""
+              fill
+              className="object-contain"
+            />
+          </div>
+          
+          <CardHeader className="bg-gradient-to-r from-purple-500/5 to-pink-500/5 relative z-10">
             <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
-              Today's Summary
+              <BarChart3 className="h-5 w-5 text-primary" />
+              Performance Metrics
             </CardTitle>
+            <CardDescription>
+              Today's operational summary
+            </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-blue-600" />
-                  <span className="text-sm font-medium text-blue-900">Rentals Today</span>
-                </div>
-                <span className="text-lg font-bold text-blue-900">
-                  {loading ? (
-                    <div className="animate-pulse bg-blue-200 rounded w-8 h-6" />
-                  ) : (
-                    stats.activeRentals
-                  )}
+          <CardContent className="space-y-6 relative z-10">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground flex items-center gap-2">
+                  <div className="w-2 h-2 bg-primary rounded-full" />
+                  Fleet Utilization
+                </span>
+                <span className="font-medium text-primary">
+                  {stats.totalBikes > 0 ? Math.round((stats.rentedBikes / stats.totalBikes) * 100) : 0}%
                 </span>
               </div>
-
-              <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <DollarSign className="h-4 w-4 text-green-600" />
-                  <span className="text-sm font-medium text-green-900">Revenue Generated</span>
-                </div>
-                <span className="text-lg font-bold text-green-900">
-                  {loading ? (
-                    <div className="animate-pulse bg-green-200 rounded w-12 h-6" />
-                  ) : (
-                    `$${stats.todayRevenue.toFixed(2)}`
-                  )}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4 text-orange-600" />
-                  <span className="text-sm font-medium text-orange-900">Maintenance Issues</span>
-                </div>
-                <span className="text-lg font-bold text-orange-900">
-                  {loading ? (
-                    <div className="animate-pulse bg-orange-200 rounded w-6 h-6" />
-                  ) : (
-                    stats.maintenanceBikes
-                  )}
-                </span>
+              <div className="h-3 bg-secondary rounded-full overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full transition-all duration-1000 w-0" />
               </div>
             </div>
 
-            <div className="mt-6 pt-4 border-t">
-              <div className="text-center">
-                <p className="text-sm text-gray-600 mb-3">Fleet Status Overview</p>
-                <div className="flex justify-center gap-4">
-                  <div className="text-center">
-                    <div className="text-lg font-bold text-green-600">{stats.availableBikes}</div>
-                    <div className="text-xs text-gray-500">Available</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-lg font-bold text-blue-600">{stats.rentedBikes}</div>
-                    <div className="text-xs text-gray-500">Rented</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-lg font-bold text-orange-600">{stats.maintenanceBikes}</div>
-                    <div className="text-xs text-gray-500">Maintenance</div>
-                  </div>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground flex items-center gap-2">
+                  <div className="w-2 h-2 bg-yellow-500 rounded-full" />
+                  Maintenance Rate
+                </span>
+                <span className="font-medium text-yellow-600">
+                  {stats.totalBikes > 0 ? Math.round((stats.maintenanceBikes / stats.totalBikes) * 100) : 0}%
+                </span>
+              </div>
+              <div className="h-3 bg-secondary rounded-full overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full transition-all duration-1000 w-0" />
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full" />
+                  System Health
+                </span>
+                <span className="font-medium text-green-600">Excellent</span>
+              </div>
+              <div className="h-3 bg-secondary rounded-full overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-green-500 to-emerald-500 rounded-full w-[95%] transition-all duration-1000" />
+              </div>
+            </div>
+
+            <div className="pt-6 space-y-3 border-t">
+              <div className="grid grid-cols-2 gap-3 text-center">
+                <div className="p-3 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg">
+                  <div className="text-lg font-bold text-blue-600">{stats.availableBikes}</div>
+                  <div className="text-xs text-blue-700">Available</div>
+                </div>
+                <div className="p-3 bg-gradient-to-br from-green-50 to-green-100 rounded-lg">
+                  <div className="text-lg font-bold text-green-600">{stats.activeRentals}</div>
+                  <div className="text-xs text-green-700">Active</div>
                 </div>
               </div>
+              
+              <Link href="/staff-dashboard/maintenance">
+                <Button className="w-full bg-gradient-to-r from-primary to-blue-600 text-primary-foreground hover:from-primary/90 hover:to-blue-600/90 transition-all duration-300 transform hover:scale-105 shadow-md">
+                  <Wrench className="h-4 w-4 mr-2" />
+                  Maintenance Hub
+                </Button>
+              </Link>
+              
+              <Link href="/staff-dashboard/transactions">
+                <Button variant="outline" className="w-full hover:bg-secondary/80 transition-all duration-300 transform hover:scale-105">
+                  <CreditCard className="h-4 w-4 mr-2" />
+                  Process Rental
+                </Button>
+              </Link>
             </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Quick Reports Section */}
+      <Card className="bg-gradient-to-br from-card to-card/50 backdrop-blur-sm relative overflow-hidden">
+        {/* Background Pattern */}
+        <div className="absolute top-0 right-0 w-20 h-20 opacity-5">
+          <Image 
+            src="/assets/background/shape-square.svg" 
+            alt=""
+            fill
+            className="object-contain"
+          />
+        </div>
+        
+        <CardHeader className="bg-gradient-to-r from-emerald-500/5 to-teal-500/5 relative z-10">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5 text-primary" />
+                Business Analytics
+              </CardTitle>
+              <CardDescription>
+                Key performance insights and reports
+              </CardDescription>
+            </div>
+            <Link href="/staff-dashboard/reports">
+              <Button variant="outline" size="sm" className="flex items-center gap-2">
+                <Eye className="h-4 w-4" />
+                View All Reports
+              </Button>
+            </Link>
+          </div>
+        </CardHeader>
+        <CardContent className="p-6 relative z-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Quick Report Cards */}
+            {[
+              {
+                title: "Monthly Revenue",
+                description: "Current month performance",
+                icon: DollarSign,
+                color: "text-green-600",
+                bgColor: "bg-green-50",
+                href: "/staff-dashboard/reports?type=monthly"
+              },
+              {
+                title: "Location Performance", 
+                description: "Station-wise analytics",
+                icon: MapPin,
+                color: "text-blue-600",
+                bgColor: "bg-blue-50",
+                href: "/staff-dashboard/reports?type=locations"
+              },
+              {
+                title: "Top Customers",
+                description: "Most valuable clients",
+                icon: Users,
+                color: "text-purple-600",
+                bgColor: "bg-purple-50",
+                href: "/staff-dashboard/reports?type=top-customers"
+              },
+              {
+                title: "Revenue Trends",
+                description: "12-month analysis",
+                icon: TrendingUp,
+                color: "text-orange-600",
+                bgColor: "bg-orange-50",
+                href: "/staff-dashboard/reports?type=revenue-trend"
+              }
+            ].map((report) => {
+              const Icon = report.icon;
+              return (
+                <Link key={report.title} href={report.href}>
+                  <div className="group p-4 rounded-xl bg-gradient-to-br from-white to-gray-50 border hover:shadow-lg hover:scale-105 transition-all duration-300 cursor-pointer relative overflow-hidden">
+                    {/* Background Pattern */}
+                    <div className="absolute top-0 right-0 w-10 h-10 opacity-5">
+                      <Image 
+                        src="/assets/background/shape-square.svg" 
+                        alt=""
+                        fill
+                        className="object-contain"
+                      />
+                    </div>
+                    
+                    <div className="relative z-10">
+                      <div className={`p-2 rounded-lg ${report.bgColor} group-hover:scale-110 transition-transform mb-3 w-fit`}>
+                        <Icon className={`h-5 w-5 ${report.color}`} />
+                      </div>
+                      <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors mb-1 text-sm">
+                        {report.title}
+                      </h3>
+                      <p className="text-xs text-gray-600">
+                        {report.description}
+                      </p>
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+          
+          <div className="mt-6 pt-6 border-t">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+              <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg">
+                <div className="text-2xl font-bold text-blue-600">11</div>
+                <div className="text-sm text-blue-700">Report Types</div>
+                <div className="text-xs text-blue-600 mt-1">Available Analytics</div>
+              </div>
+              <div className="p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg">
+                <div className="text-2xl font-bold text-green-600">Live</div>
+                <div className="text-sm text-green-700">Data Updates</div>
+                <div className="text-xs text-green-600 mt-1">Real-time Insights</div>
+              </div>
+              <div className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg">
+                <div className="text-2xl font-bold text-purple-600">CSV</div>
+                <div className="text-sm text-purple-700">Export Format</div>
+                <div className="text-xs text-purple-600 mt-1">Easy Data Export</div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
     </div>
   );

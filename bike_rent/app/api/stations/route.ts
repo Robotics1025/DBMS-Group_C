@@ -6,20 +6,20 @@ const prisma = new PrismaClient()
 
 export async function GET() {
   try {
-    // Get all stations with current bike counts
+    // Get all locations with current bike counts
     const stationsQuery = `
       SELECT 
-        s.StationID,
-        s.StationName,
-        s.Location,
-        s.Capacity,
+        l.LocationID as StationID,
+        l.LocationName as StationName,
+        l.Address as Location,
+        l.Capacity,
         COUNT(CASE WHEN b.CurrentStatus IN ('Available', 'Rented') THEN 1 END) as BikeCount,
         COUNT(CASE WHEN b.CurrentStatus = 'Available' THEN 1 END) as AvailableBikes,
         COUNT(CASE WHEN b.CurrentStatus = 'Rented' THEN 1 END) as RentedBikes
-      FROM station s
-      LEFT JOIN bike b ON s.StationID = b.LocationID
-      GROUP BY s.StationID, s.StationName, s.Location, s.Capacity
-      ORDER BY s.StationName
+      FROM location l
+      LEFT JOIN bike b ON l.LocationID = b.LocationID
+      GROUP BY l.LocationID, l.LocationName, l.Address, l.Capacity
+      ORDER BY l.LocationName
     `;
 
     const result = await executeQuery(prisma, stationsQuery, []);

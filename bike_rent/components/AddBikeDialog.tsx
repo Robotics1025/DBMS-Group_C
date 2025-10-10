@@ -36,24 +36,43 @@ interface BikesApiResponse {
 useEffect(() => {
   async function fetchLocations() {
     try {
-      const res = await fetch("/api/bikes");
-      if (!res.ok) throw new Error("Failed to fetch bikes");
+      // Fetch from the dedicated locations API instead of bikes
+      const res = await fetch("/api/location");
+      if (!res.ok) throw new Error("Failed to fetch locations");
 
-      const data: BikesApiResponse = await res.json(); // <- type assertion
+      const data = await res.json();
 
-      if (data.success && data.bikes) {
-        const uniqueLocations = Array.from(
-          new Map(
-            data.bikes.map((b) => [b.locationId, { id: b.locationId, name: b.locationName }])
-          ).values()
-        );
+      if (data.success && Array.isArray(data.locations)) {
+        // Map the API response to our expected format
+        const locationList = data.locations
+          .filter((location: any) => location.LocationID && location.LocationName)
+          .map((location: any) => ({
+            id: location.LocationID.toString(),
+            name: location.LocationName
+          }));
 
-        setLocations(uniqueLocations);
+        setLocations(locationList);
       } else {
-        toast.error("Failed to load locations");
+        // Fallback: try to get locations from bikes API
+        const bikeRes = await fetch("/api/bikes");
+        if (bikeRes.ok) {
+          const bikeData: BikesApiResponse = await bikeRes.json();
+          if (bikeData.success && bikeData.bikes) {
+            const uniqueLocations = Array.from(
+              new Map(
+                bikeData.bikes
+                  .filter((b) => b.locationId && b.locationName)
+                  .map((b) => [b.locationId, { id: b.locationId, name: b.locationName }])
+              ).values()
+            );
+            setLocations(uniqueLocations);
+          }
+        } else {
+          toast.error("Failed to load locations");
+        }
       }
     } catch (err) {
-      console.error(err);
+      console.error("Error fetching locations:", err);
       toast.error("Error fetching locations");
     } finally {
       setLoadingLocations(false);
@@ -207,11 +226,13 @@ useEffect(() => {
                   {loadingLocations ? (
                     <SelectItem value="loading" disabled>Loading locations...</SelectItem>
                   ) : locations.length > 0 ? (
-                    locations.map((loc) => (
-                      <SelectItem key={loc.id} value={loc.id.toString()}>
-                        {loc.name}
-                      </SelectItem>
-                    ))
+                    locations
+                      .filter((loc) => loc.id && loc.name) // Additional safety filter
+                      .map((loc) => (
+                        <SelectItem key={loc.id} value={loc.id.toString()}>
+                          {loc.name}
+                        </SelectItem>
+                      ))
                   ) : (
                     <SelectItem value="no-locations" disabled>No locations available</SelectItem>
                   )}

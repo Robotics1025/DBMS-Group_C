@@ -43,10 +43,10 @@ export async function GET(request: NextRequest) {
         b.BikeSerialNumber,
         b.Model as BikeModel,
         b.BikeType,
-        s.StationName
+        l.LocationName as StationName
       FROM maintenance m
       JOIN bike b ON m.BikeID = b.BikeID
-      LEFT JOIN station s ON b.StationID = s.StationID
+      LEFT JOIN location l ON b.LocationID = l.LocationID
       ${whereClause}
       ORDER BY m.MaintenanceDate DESC
       LIMIT ? OFFSET ?

@@ -16,7 +16,7 @@ export const config = {
 // GET /api/bikes - Fetch all bikes with maintenance information
 export async function GET() {
   try {
-    // Enhanced query to include maintenance and station information
+    // Enhanced query to include maintenance and location information
     const enhancedBikesQuery = `
       SELECT 
         b.BikeID,
@@ -26,17 +26,16 @@ export async function GET() {
         b.CurrentStatus as Status,
         b.LastMaintenanceDate,
         b.RentalRatePerMinute,
-        b.BatteryLevel,
         b.bike_image,
-        s.StationName,
-        s.StationID,
+        l.LocationName as StationName,
+        l.LocationID as StationID,
         CASE 
-          WHEN b.CurrentStatus IN ('Maintenance', 'Damaged') THEN 1
+          WHEN b.CurrentStatus = 'In_Maintenance' THEN 1
           ELSE 0
         END as NeedsMaintenance,
-        (SELECT COUNT(*) FROM maintenance m WHERE m.BikeID = b.BikeID AND m.Status = 'Scheduled') as PendingMaintenance
+        (SELECT COUNT(*) FROM maintenance m WHERE m.BikeID = b.BikeID) as PendingMaintenance
       FROM bike b
-      LEFT JOIN station s ON b.LocationID = s.StationID
+      LEFT JOIN location l ON b.LocationID = l.LocationID
       ORDER BY b.BikeSerialNumber
     `;
 
@@ -56,7 +55,6 @@ export async function GET() {
       Status: bike.Status,
       LastMaintenance: bike.LastMaintenanceDate,
       RentalRatePerMinute: Number(bike.RentalRatePerMinute),
-      BatteryLevel: bike.BatteryLevel ? Number(bike.BatteryLevel) : null,
       bike_image: bike.bike_image,
       StationName: bike.StationName,
       StationID: bike.StationID ? Number(bike.StationID) : null,

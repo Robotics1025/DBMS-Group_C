@@ -490,6 +490,252 @@ export const notificationQueries = {
 };
 
 // =============================================================================
+// SALES & ANALYTICS REPORT QUERIES
+// =============================================================================
+
+export const salesReportQueries = {
+  // Daily Sales Report
+  getDailySalesReport: `
+    SELECT 
+      DATE(r.RentalStart) as SalesDate,
+      COUNT(r.RentalID) as TotalRentals,
+      SUM(CASE WHEN r.PaymentStatus = 'Paid' THEN r.TotalCost ELSE 0 END) as TotalRevenue,
+      AVG(CASE WHEN r.PaymentStatus = 'Paid' AND r.RentalEnd IS NOT NULL THEN 
+        TIMESTAMPDIFF(MINUTE, r.RentalStart, r.RentalEnd) ELSE NULL END) as AvgRentalDurationMinutes,
+      COUNT(DISTINCT r.CustomerID) as UniqueCustomers,
+      SUM(CASE WHEN r.PaymentStatus = 'Paid' THEN 1 ELSE 0 END) as PaidRentals,
+      SUM(CASE WHEN r.PaymentStatus = 'Pending' THEN 1 ELSE 0 END) as PendingPayments,
+      SUM(CASE WHEN r.PaymentStatus = 'Cancelled' THEN 1 ELSE 0 END) as CancelledRentals
+    FROM rental r
+    WHERE DATE(r.RentalStart) BETWEEN ? AND ?
+    GROUP BY DATE(r.RentalStart)
+    ORDER BY SalesDate DESC
+  `,
+
+  // Monthly Sales Report
+  getMonthlySalesReport: `
+    SELECT 
+      YEAR(r.RentalStart) as SalesYear,
+      MONTH(r.RentalStart) as SalesMonth,
+      MONTHNAME(r.RentalStart) as MonthName,
+      COUNT(r.RentalID) as TotalRentals,
+      SUM(CASE WHEN r.PaymentStatus = 'Paid' THEN r.TotalCost ELSE 0 END) as TotalRevenue,
+      AVG(CASE WHEN r.PaymentStatus = 'Paid' AND r.RentalEnd IS NOT NULL THEN 
+        TIMESTAMPDIFF(MINUTE, r.RentalStart, r.RentalEnd) ELSE NULL END) as AvgRentalDurationMinutes,
+      COUNT(DISTINCT r.CustomerID) as UniqueCustomers,
+      SUM(CASE WHEN r.PaymentStatus = 'Paid' THEN 1 ELSE 0 END) as PaidRentals,
+      AVG(CASE WHEN r.PaymentStatus = 'Paid' THEN r.TotalCost ELSE NULL END) as AvgRevenuePerRental
+    FROM rental r
+    WHERE r.RentalStart >= DATE_SUB(CURDATE(), INTERVAL ? MONTH)
+    GROUP BY YEAR(r.RentalStart), MONTH(r.RentalStart)
+    ORDER BY SalesYear DESC, SalesMonth DESC
+  `,
+
+  // Quarterly Sales Report
+  getQuarterlySalesReport: `
+    SELECT 
+      YEAR(r.RentalStart) as SalesYear,
+      QUARTER(r.RentalStart) as SalesQuarter,
+      CONCAT('Q', QUARTER(r.RentalStart), ' ', YEAR(r.RentalStart)) as QuarterLabel,
+      COUNT(r.RentalID) as TotalRentals,
+      SUM(CASE WHEN r.PaymentStatus = 'Paid' THEN r.TotalCost ELSE 0 END) as TotalRevenue,
+      AVG(CASE WHEN r.PaymentStatus = 'Paid' AND r.RentalEnd IS NOT NULL THEN 
+        TIMESTAMPDIFF(MINUTE, r.RentalStart, r.RentalEnd) ELSE NULL END) as AvgRentalDurationMinutes,
+      COUNT(DISTINCT r.CustomerID) as UniqueCustomers,
+      SUM(CASE WHEN r.PaymentStatus = 'Paid' THEN 1 ELSE 0 END) as PaidRentals,
+      AVG(CASE WHEN r.PaymentStatus = 'Paid' THEN r.TotalCost ELSE NULL END) as AvgRevenuePerRental,
+      MAX(r.TotalCost) as HighestSingleRental,
+      MIN(CASE WHEN r.PaymentStatus = 'Paid' AND r.TotalCost > 0 THEN r.TotalCost ELSE NULL END) as LowestSingleRental
+    FROM rental r
+    WHERE r.RentalStart >= DATE_SUB(CURDATE(), INTERVAL ? QUARTER)
+    GROUP BY YEAR(r.RentalStart), QUARTER(r.RentalStart)
+    ORDER BY SalesYear DESC, SalesQuarter DESC
+  `,
+
+  // Yearly Sales Report
+  getYearlySalesReport: `
+    SELECT 
+      YEAR(r.RentalStart) as SalesYear,
+      COUNT(r.RentalID) as TotalRentals,
+      SUM(CASE WHEN r.PaymentStatus = 'Paid' THEN r.TotalCost ELSE 0 END) as TotalRevenue,
+      AVG(CASE WHEN r.PaymentStatus = 'Paid' AND r.RentalEnd IS NOT NULL THEN 
+        TIMESTAMPDIFF(MINUTE, r.RentalStart, r.RentalEnd) ELSE NULL END) as AvgRentalDurationMinutes,
+      COUNT(DISTINCT r.CustomerID) as UniqueCustomers,
+      SUM(CASE WHEN r.PaymentStatus = 'Paid' THEN 1 ELSE 0 END) as PaidRentals,
+      AVG(CASE WHEN r.PaymentStatus = 'Paid' THEN r.TotalCost ELSE NULL END) as AvgRevenuePerRental,
+      MAX(r.TotalCost) as HighestSingleRental,
+      MIN(CASE WHEN r.PaymentStatus = 'Paid' AND r.TotalCost > 0 THEN r.TotalCost ELSE NULL END) as LowestSingleRental,
+      -- Growth calculation compared to previous year
+      (SUM(CASE WHEN r.PaymentStatus = 'Paid' THEN r.TotalCost ELSE 0 END) - 
+       LAG(SUM(CASE WHEN r.PaymentStatus = 'Paid' THEN r.TotalCost ELSE 0 END)) OVER (ORDER BY YEAR(r.RentalStart))) 
+       / NULLIF(LAG(SUM(CASE WHEN r.PaymentStatus = 'Paid' THEN r.TotalCost ELSE 0 END)) OVER (ORDER BY YEAR(r.RentalStart)), 0) * 100 as RevenueGrowthPercent
+    FROM rental r
+    WHERE r.RentalStart >= DATE_SUB(CURDATE(), INTERVAL ? YEAR)
+    GROUP BY YEAR(r.RentalStart)
+    ORDER BY SalesYear DESC
+  `,
+
+  // Top Performing Locations Report
+  getLocationPerformanceReport: `
+    SELECT 
+      l.LocationID,
+      l.LocationName,
+      l.Address,
+      l.City,
+      COUNT(r.RentalID) as TotalRentals,
+      SUM(CASE WHEN r.PaymentStatus = 'Paid' THEN r.TotalCost ELSE 0 END) as TotalRevenue,
+      AVG(CASE WHEN r.PaymentStatus = 'Paid' THEN r.TotalCost ELSE NULL END) as AvgRevenuePerRental,
+      COUNT(DISTINCT r.CustomerID) as UniqueCustomers,
+      COUNT(DISTINCT b.BikeID) as TotalBikes,
+      ROUND(COUNT(r.RentalID) / COUNT(DISTINCT b.BikeID), 2) as RentalsPerBike,
+      ROUND(SUM(CASE WHEN r.PaymentStatus = 'Paid' THEN r.TotalCost ELSE 0 END) / COUNT(DISTINCT b.BikeID), 2) as RevenuePerBike
+    FROM location l
+    LEFT JOIN bike b ON l.LocationID = b.LocationID
+    LEFT JOIN rental r ON b.BikeID = r.BikeID 
+      AND r.RentalStart >= DATE_SUB(CURDATE(), INTERVAL ? MONTH)
+    GROUP BY l.LocationID, l.LocationName, l.Address, l.City
+    ORDER BY TotalRevenue DESC
+  `,
+
+  // Bike Type Performance Report
+  getBikeTypePerformanceReport: `
+    SELECT 
+      b.BikeType,
+      COUNT(r.RentalID) as TotalRentals,
+      SUM(CASE WHEN r.PaymentStatus = 'Paid' THEN r.TotalCost ELSE 0 END) as TotalRevenue,
+      AVG(CASE WHEN r.PaymentStatus = 'Paid' THEN r.TotalCost ELSE NULL END) as AvgRevenuePerRental,
+      AVG(CASE WHEN r.PaymentStatus = 'Paid' AND r.RentalEnd IS NOT NULL THEN 
+        TIMESTAMPDIFF(MINUTE, r.RentalStart, r.RentalEnd) ELSE NULL END) as AvgRentalDurationMinutes,
+      COUNT(DISTINCT b.BikeID) as TotalBikes,
+      ROUND(COUNT(r.RentalID) / COUNT(DISTINCT b.BikeID), 2) as RentalsPerBike,
+      AVG(b.RentalRatePerMinute) as AvgRatePerMinute
+    FROM bike b
+    LEFT JOIN rental r ON b.BikeID = r.BikeID 
+      AND r.RentalStart >= DATE_SUB(CURDATE(), INTERVAL ? MONTH)
+    GROUP BY b.BikeType
+    ORDER BY TotalRevenue DESC
+  `,
+
+  // Top Customers Report
+  getTopCustomersReport: `
+    SELECT 
+      u.UserID,
+      u.FirstName,
+      u.LastName,
+      u.Email,
+      u.PhoneNumber,
+      u.RegistrationDate,
+      u.LoyaltyPoints,
+      COUNT(r.RentalID) as TotalRentals,
+      SUM(CASE WHEN r.PaymentStatus = 'Paid' THEN r.TotalCost ELSE 0 END) as TotalSpent,
+      AVG(CASE WHEN r.PaymentStatus = 'Paid' THEN r.TotalCost ELSE NULL END) as AvgSpentPerRental,
+      AVG(CASE WHEN r.PaymentStatus = 'Paid' AND r.RentalEnd IS NOT NULL THEN 
+        TIMESTAMPDIFF(MINUTE, r.RentalStart, r.RentalEnd) ELSE NULL END) as AvgRentalDurationMinutes,
+      MAX(r.RentalStart) as LastRentalDate,
+      DATEDIFF(CURDATE(), MAX(r.RentalStart)) as DaysSinceLastRental
+    FROM user u
+    LEFT JOIN rental r ON u.UserID = r.CustomerID 
+      AND r.RentalStart >= DATE_SUB(CURDATE(), INTERVAL ? MONTH)
+    WHERE u.Role = 'Customer'
+    GROUP BY u.UserID, u.FirstName, u.LastName, u.Email, u.PhoneNumber, u.RegistrationDate, u.LoyaltyPoints
+    HAVING TotalRentals > 0
+    ORDER BY TotalSpent DESC
+    LIMIT ?
+  `,
+
+  // Payment Method Analysis
+  getPaymentMethodReport: `
+    SELECT 
+      p.PaymentMethod,
+      COUNT(p.PaymentID) as TotalTransactions,
+      SUM(p.Amount) as TotalAmount,
+      AVG(p.Amount) as AvgTransactionAmount,
+      MAX(p.Amount) as HighestTransaction,
+      MIN(p.Amount) as LowestTransaction,
+      ROUND(COUNT(p.PaymentID) * 100.0 / (SELECT COUNT(*) FROM payment WHERE PaymentDate >= DATE_SUB(CURDATE(), INTERVAL ? MONTH)), 2) as PercentageOfTransactions,
+      ROUND(SUM(p.Amount) * 100.0 / (SELECT SUM(Amount) FROM payment WHERE PaymentDate >= DATE_SUB(CURDATE(), INTERVAL ? MONTH)), 2) as PercentageOfRevenue
+    FROM payment p
+    WHERE p.PaymentDate >= DATE_SUB(CURDATE(), INTERVAL ? MONTH)
+    GROUP BY p.PaymentMethod
+    ORDER BY TotalAmount DESC
+  `,
+
+  // Peak Usage Hours Report
+  getPeakUsageReport: `
+    SELECT 
+      HOUR(r.RentalStart) as RentalHour,
+      COUNT(r.RentalID) as TotalRentals,
+      SUM(CASE WHEN r.PaymentStatus = 'Paid' THEN r.TotalCost ELSE 0 END) as TotalRevenue,
+      AVG(CASE WHEN r.PaymentStatus = 'Paid' THEN r.TotalCost ELSE NULL END) as AvgRevenuePerRental,
+      COUNT(DISTINCT r.CustomerID) as UniqueCustomers,
+      ROUND(COUNT(r.RentalID) * 100.0 / (SELECT COUNT(*) FROM rental WHERE RentalStart >= DATE_SUB(CURDATE(), INTERVAL ? MONTH)), 2) as PercentageOfTotalRentals
+    FROM rental r
+    WHERE r.RentalStart >= DATE_SUB(CURDATE(), INTERVAL ? MONTH)
+    GROUP BY HOUR(r.RentalStart)
+    ORDER BY TotalRentals DESC
+  `,
+
+  // Revenue Trend Analysis (Last 12 Months)
+  getRevenueTrendReport: `
+    SELECT 
+      DATE_FORMAT(r.RentalStart, '%Y-%m') as MonthYear,
+      YEAR(r.RentalStart) as Year,
+      MONTH(r.RentalStart) as Month,
+      MONTHNAME(r.RentalStart) as MonthName,
+      COUNT(r.RentalID) as TotalRentals,
+      SUM(CASE WHEN r.PaymentStatus = 'Paid' THEN r.TotalCost ELSE 0 END) as TotalRevenue,
+      AVG(CASE WHEN r.PaymentStatus = 'Paid' THEN r.TotalCost ELSE NULL END) as AvgRevenuePerRental,
+      -- Moving average (3-month)
+      AVG(SUM(CASE WHEN r.PaymentStatus = 'Paid' THEN r.TotalCost ELSE 0 END)) 
+        OVER (ORDER BY YEAR(r.RentalStart), MONTH(r.RentalStart) ROWS 2 PRECEDING) as ThreeMonthMovingAvg,
+      -- Month-over-month growth
+      (SUM(CASE WHEN r.PaymentStatus = 'Paid' THEN r.TotalCost ELSE 0 END) - 
+       LAG(SUM(CASE WHEN r.PaymentStatus = 'Paid' THEN r.TotalCost ELSE 0 END)) 
+       OVER (ORDER BY YEAR(r.RentalStart), MONTH(r.RentalStart))) 
+       / NULLIF(LAG(SUM(CASE WHEN r.PaymentStatus = 'Paid' THEN r.TotalCost ELSE 0 END)) 
+       OVER (ORDER BY YEAR(r.RentalStart), MONTH(r.RentalStart)), 0) * 100 as MonthOverMonthGrowthPercent
+    FROM rental r
+    WHERE r.RentalStart >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
+    GROUP BY YEAR(r.RentalStart), MONTH(r.RentalStart)
+    ORDER BY Year DESC, Month DESC
+  `,
+
+  // Comprehensive Business Summary Report
+  getBusinessSummaryReport: `
+    SELECT 
+      -- Overall Metrics
+      COUNT(DISTINCT r.RentalID) as TotalRentals,
+      COUNT(DISTINCT r.CustomerID) as TotalCustomers,
+      COUNT(DISTINCT b.BikeID) as TotalBikes,
+      COUNT(DISTINCT l.LocationID) as TotalLocations,
+      
+      -- Revenue Metrics
+      SUM(CASE WHEN r.PaymentStatus = 'Paid' THEN r.TotalCost ELSE 0 END) as TotalRevenue,
+      AVG(CASE WHEN r.PaymentStatus = 'Paid' THEN r.TotalCost ELSE NULL END) as AvgRevenuePerRental,
+      MAX(r.TotalCost) as HighestSingleRental,
+      
+      -- Operational Metrics
+      AVG(CASE WHEN r.PaymentStatus = 'Paid' AND r.RentalEnd IS NOT NULL THEN 
+        TIMESTAMPDIFF(MINUTE, r.RentalStart, r.RentalEnd) ELSE NULL END) as AvgRentalDurationMinutes,
+      
+      -- Payment Status Distribution
+      SUM(CASE WHEN r.PaymentStatus = 'Paid' THEN 1 ELSE 0 END) as PaidRentals,
+      SUM(CASE WHEN r.PaymentStatus = 'Pending' THEN 1 ELSE 0 END) as PendingPayments,
+      SUM(CASE WHEN r.PaymentStatus = 'Cancelled' THEN 1 ELSE 0 END) as CancelledRentals,
+      
+      -- Growth Metrics (compared to previous period)
+      COUNT(CASE WHEN r.RentalStart >= DATE_SUB(CURDATE(), INTERVAL ? DAY) THEN 1 END) as RecentRentals,
+      SUM(CASE WHEN r.RentalStart >= DATE_SUB(CURDATE(), INTERVAL ? DAY) AND r.PaymentStatus = 'Paid' 
+        THEN r.TotalCost ELSE 0 END) as RecentRevenue
+      
+    FROM rental r
+    LEFT JOIN bike b ON r.BikeID = b.BikeID
+    LEFT JOIN location l ON b.LocationID = l.LocationID
+    WHERE r.RentalStart >= DATE_SUB(CURDATE(), INTERVAL ? MONTH)
+  `
+};
+
+// =============================================================================
 // UTILITY FUNCTIONS FOR QUERY EXECUTION
 // =============================================================================
 
