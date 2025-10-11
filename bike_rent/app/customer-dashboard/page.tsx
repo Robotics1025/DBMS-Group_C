@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Heart, Star, Filter, Search, MapPin, Battery, Clock, CreditCard, Receipt, User, LogOut, Menu, X, ChevronRight, Award, Truck, Shield } from "lucide-react";
+import { Heart, Star, Filter, Search, MapPin, Battery, Clock, CreditCard, Receipt, User, LogOut, Menu, X, ChevronRight, Award, Truck, Shield, ChevronDown, Home, Grid, Package, Zap, TrendingUp, Tag, ShoppingCart } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,11 +13,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotify } from "@/hooks/use-notify";
-// Removed cart context - using direct rental system
 import { NotificationBell } from "@/components/NotificationBell";
+import { Footer } from "@/components/footer";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface Bike {
   id: string;
+  serialNumber: string; // BikeSerialNumber
   name: string;
   type: 'Electric' | 'Mountain' | 'City' | 'Hybrid' | 'Racing';
   brand: string;
@@ -49,74 +51,172 @@ export default function CustomerDashboard() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [locationFilter, setLocationFilter] = useState<string>("all");
   const [brandFilter, setBrandFilter] = useState<string[]>([]);
-    const [priceRange, setPriceRange] = useState([0, 100]);
+  const [priceRange, setPriceRange] = useState([0, 100]);
   const [sortBy, setSortBy] = useState<string>("popular");
   const [favorites, setFavorites] = useState<string[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   const [currentAdIndex, setCurrentAdIndex] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 9;
 
-  const categories = [
-    { id: "all", name: "All Bikes", icon: "🚴", count: bikes.length },
-    { id: "electric", name: "Electric", icon: "⚡", count: bikes.filter(b => b.type === "Electric").length },
-    { id: "mountain", name: "Mountain", icon: "🏔️", count: bikes.filter(b => b.type === "Mountain").length },
-    { id: "city", name: "City", icon: "🏙️", count: bikes.filter(b => b.type === "City").length },
-    { id: "racing", name: "Racing", icon: "🏁", count: bikes.filter(b => b.type === "Racing").length },
-    { id: "hybrid", name: "Hybrid", icon: "🔄", count: bikes.filter(b => b.type === "Hybrid").length },
+  // Memoize categories to prevent infinite re-renders
+  const categories = React.useMemo(() => [
+    { id: "all", name: "All Bikes", icon: Grid, count: bikes.length, color: "bg-blue-500" },
+    { id: "electric", name: "Electric", icon: Zap, count: bikes.filter(b => b.type === "Electric").length, color: "bg-yellow-500" },
+    { id: "mountain", name: "Mountain", icon: TrendingUp, count: bikes.filter(b => b.type === "Mountain").length, color: "bg-green-500" },
+    { id: "city", name: "City", icon: Home, count: bikes.filter(b => b.type === "City").length, color: "bg-purple-500" },
+    { id: "racing", name: "Racing", icon: Zap, count: bikes.filter(b => b.type === "Racing").length, color: "bg-red-500" },
+    { id: "hybrid", name: "Hybrid", icon: Package, count: bikes.filter(b => b.type === "Hybrid").length, color: "bg-orange-500" },
+  ], [bikes]);
+
+  const bannerAds = [
+    {
+      id: 1,
+      title: "Summer Sale",
+      subtitle: "Up to 50% OFF on Electric Bikes",
+      image: "/bike2.jpg",
+      cta: "Shop Now",
+      gradient: "from-orange-500 to-red-500"
+    },
+    {
+      id: 2,
+      title: "New Arrivals",
+      subtitle: "Check out our latest mountain bikes",
+      image: "/bike3.jpg",
+      cta: "Explore",
+      gradient: "from-green-500 to-teal-500"
+    },
+    {
+      id: 3,
+      title: "Flash Deal",
+      subtitle: "Limited time offer on city bikes",
+      image: "/bike.jpg",
+      cta: "Get Offer",
+      gradient: "from-blue-500 to-purple-500"
+    }
   ];
 
-  const brands = Array.from(new Set(bikes.map(bike => bike.brand))).filter(Boolean);
-  const topSellingBikes = [...bikes].sort((a, b) => (b.reviews || 0) - (a.reviews || 0)).slice(0, 4);
+  const brands = React.useMemo(() => 
+    Array.from(new Set(bikes.map(bike => bike.brand))).filter(Boolean),
+    [bikes]
+  );
+
+  const locations = React.useMemo(() => 
+    Array.from(new Set(bikes.map(bike => bike.location))).filter(Boolean).sort(),
+    [bikes]
+  );
+  
+  // Memoize top categories to prevent infinite re-renders
+  const topCategories = React.useMemo(() => [
+    { 
+      name: "Electric Bikes", 
+      count: bikes.filter(b => b.type === "Electric").length,
+      image: bikes.find(b => b.type === "Electric")?.image || "/bike2.jpg",
+      icon: Zap,
+      color: "from-yellow-400 to-orange-500"
+    },
+    { 
+      name: "Mountain Bikes", 
+      count: bikes.filter(b => b.type === "Mountain").length,
+      image: bikes.find(b => b.type === "Mountain")?.image || "/bike3.jpg",
+      icon: TrendingUp,
+      color: "from-green-400 to-teal-500"
+    },
+    { 
+      name: "City Bikes", 
+      count: bikes.filter(b => b.type === "City").length,
+      image: bikes.find(b => b.type === "City")?.image || "/bike.jpg",
+      icon: Home,
+      color: "from-blue-400 to-purple-500"
+    },
+    { 
+      name: "Racing Bikes", 
+      count: bikes.filter(b => b.type === "Racing").length,
+      image: bikes.find(b => b.type === "Racing")?.image || "/bike2.jpg",
+      icon: Zap,
+      color: "from-red-400 to-pink-500"
+    },
+    { 
+      name: "Hybrid Bikes", 
+      count: bikes.filter(b => b.type === "Hybrid").length,
+      image: bikes.find(b => b.type === "Hybrid")?.image || "/bike3.jpg",
+      icon: Package,
+      color: "from-purple-400 to-indigo-500"
+    },
+  ].filter(cat => cat.count > 0), [bikes]); // Only show categories with bikes
 
   // Fetch bikes from API
   useEffect(() => {
     const fetchBikes = async () => {
+      console.log('🚀 [FETCH START] Setting loading to TRUE');
+      setLoading(true);
+      
       try {
-        setLoading(true);
-        const response = await fetch('/api/bikes');
+        console.log('📡 [FETCH] Calling /api/bike_all...');
+        const response = await fetch('/api/bike_all');
+        
         if (!response.ok) {
-          throw new Error('Failed to fetch bikes');
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
+        
         const result = await response.json();
+        console.log('✅ [API SUCCESS] Response:', result);
         
         // Check if the API response has the expected structure
         if (!result.success || !Array.isArray(result.bikes)) {
+          console.error('❌ [ERROR] Invalid response structure:', result);
           throw new Error('Invalid API response structure');
         }
         
-        // Transform API data to match our interface
-        const transformedBikes: Bike[] = result.bikes.map((bike: any) => ({
-          id: bike.BikeID?.toString() || 'unknown',
-          name: bike.Model || 'Bike',
-          type: bike.BikeType || 'City',
-          brand: 'BikeRental', // Default brand since not in API
-          price: Math.round((bike.RentalRatePerMinute || 5) / 10), // Use rate/10 as daily price (30 for rate 300)
-          hourlyRate: Math.round((bike.RentalRatePerMinute || 5) / 50), // Use rate/50 as hourly price (6 for rate 300)
-          rating: 4.0 + Math.random(), // Random rating between 4-5
-          reviews: Math.floor(Math.random() * 100) + 10, // Random review count
-          location: bike.StationName || 'Station',
-          image: bike.bike_image || '/bike.jpg',
-          available: bike.Status === 'Available',
-          description: `${bike.BikeType} ${bike.Model}`,
-          features: bike.BikeType === 'Electric' ? ['Electric Motor', 'Long Range'] : ['Lightweight', 'Durable'],
-          battery: bike.BikeType === 'Electric' ? 85 + Math.floor(Math.random() * 15) : undefined,
-          range: bike.BikeType === 'Electric' ? 40 + Math.floor(Math.random() * 20) : undefined
-        }));
+        console.log(`📊 [DATA] Raw bikes from API: ${result.bikes.length}`);
         
+        // Transform API data to match our interface - Show ALL bikes (no deduplication)
+        const transformedBikes = result.bikes.map((bike: any) => {
+          const rentalRate = Number(bike.RentalRatePerMinute) || 5;
+          return {
+            id: bike.BikeID?.toString() || 'unknown',
+            serialNumber: bike.BikeSerialNumber || 'N/A',
+            name: bike.Model || 'Bike',
+            type: bike.BikeType || 'City',
+            brand: 'BikeRental',
+            price: Math.round(rentalRate * 60 * 24 / 100) || 30, // Daily rate
+            hourlyRate: Math.round(rentalRate * 60 / 100) || 5, // Hourly rate
+            rating: 4.0 + Math.random(),
+            reviews: Math.floor(Math.random() * 100) + 10,
+            location: bike.LocationName || 'Station',
+            image: bike.bike_image || '/bike.jpg',
+            available: bike.CurrentStatus === 'Available',
+            description: `${bike.BikeType} ${bike.Model}`,
+            features: bike.BikeType === 'Electric' ? ['Electric Motor', 'Long Range'] : ['Lightweight', 'Durable'],
+            battery: bike.BikeType === 'Electric' ? 85 + Math.floor(Math.random() * 15) : undefined,
+            range: bike.BikeType === 'Electric' ? 40 + Math.floor(Math.random() * 20) : undefined,
+            distance: Math.floor(Math.random() * 10) + 1
+          };
+        });
+        
+        console.log(`🔄 [TRANSFORM] Showing ALL ${transformedBikes.length} bikes:`, transformedBikes);
+        
+        console.log('💾 [STATE] Setting bikes state...');
         setBikes(transformedBikes);
         setFilteredBikes(transformedBikes);
+        
+        console.log('✨ [SUCCESS] Data fetch and transform complete');
       } catch (error) {
-        console.error('Error fetching bikes:', error);
+        console.error('❌ [ERROR] Error fetching bikes:', error);
         notify.error('Failed to load bikes', 'Please try refreshing the page');
         setBikes([]);
         setFilteredBikes([]);
       } finally {
+        console.log('🏁 [FETCH END] Setting loading to FALSE');
         setLoading(false);
+        console.log('🏁 [FETCH END] Loading state should now be false');
       }
     };
 
     fetchBikes();
-  }, [notify]);
+  }, []); // Empty dependency array - only run once on mount
   
   // Auto-play carousel
   React.useEffect(() => {
@@ -135,12 +235,17 @@ export default function CustomerDashboard() {
         bike.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         bike.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
         bike.brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        bike.location.toLowerCase().includes(searchTerm.toLowerCase())
+        bike.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        bike.serialNumber.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
     if (typeFilter !== "all") {
       filtered = filtered.filter(bike => bike.type.toLowerCase() === typeFilter.toLowerCase());
+    }
+
+    if (locationFilter !== "all") {
+      filtered = filtered.filter(bike => bike.location === locationFilter);
     }
 
     if (brandFilter.length > 0) {
@@ -155,13 +260,27 @@ export default function CustomerDashboard() {
         case "price-high": return b.price - a.price;
         case "rating": return b.rating - a.rating;
         case "popular": return b.reviews - a.reviews;
+        case "location": return a.location.localeCompare(b.location);
         case "newest": return 0;
         default: return 0;
       }
     });
 
     setFilteredBikes(filtered);
-  }, [bikes, searchTerm, typeFilter, brandFilter, priceRange, sortBy]);
+    setCurrentPage(1); // Reset to first page when filters change
+  }, [bikes, searchTerm, typeFilter, locationFilter, brandFilter, priceRange, sortBy]);
+
+  // Pagination
+  const totalPages = Math.ceil(filteredBikes.length / ITEMS_PER_PAGE);
+  const paginatedBikes = filteredBikes.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const toggleFavorite = (bikeId: string) => {
     if (favorites.includes(bikeId)) {
@@ -182,12 +301,40 @@ export default function CustomerDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+      {/* Top Header Bar */}
+      <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white py-2">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center text-sm">
+            <div className="flex items-center space-x-6">
+              <span className="flex items-center">
+                <Truck className="h-4 w-4 mr-1" />
+                Free Delivery on orders above $100
+              </span>
+              <span className="hidden md:flex items-center">
+                <Shield className="h-4 w-4 mr-1" />
+                100% Secure Payments
+              </span>
+            </div>
+            <div className="flex items-center space-x-4">
+              <Link href="/customer-dashboard/profile" className="hover:underline flex items-center">
+                <Receipt className="h-4 w-4 mr-1" />
+                My Orders
+              </Link>
+              <Link href="/customer-dashboard/profile" className="hover:underline flex items-center">
+                <User className="h-4 w-4 mr-1" />
+                Account
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Header */}
       <header className="bg-white shadow-sm sticky top-0 z-50 border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            {/* Logo and Mobile Menu */}
+          <div className="flex justify-between items-center h-20">
+            {/* Logo */}
             <div className="flex items-center">
               <Button
                 variant="ghost"
@@ -197,77 +344,91 @@ export default function CustomerDashboard() {
               >
                 <Menu className="h-6 w-6" />
               </Button>
-              <div className="flex-shrink-0 flex items-center">
-                <div className="h-8 w-8 bg-orange-500 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">BR</span>
+              <div className="flex items-center">
+                <div className="h-12 w-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center shadow-lg">
+                  <span className="text-white font-bold text-xl">BR</span>
                 </div>
-                <span className="ml-2 text-xl font-bold text-gray-900">BikeRent</span>
+                <div className="ml-3">
+                  <span className="text-2xl font-bold bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent">BikeRent</span>
+                  <p className="text-xs text-gray-500">Your Trusted Bike Partner</p>
+                </div>
               </div>
             </div>
 
-            {/* Search Bar with Actions */}
+            {/* Search Bar */}
             <div className="flex-1 max-w-2xl mx-8 hidden md:block">
-              <div className="flex items-center gap-3">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                  <Input
-                    type="text"
-                    placeholder="Search for bikes, brands, locations..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 border-orange-200 focus:border-orange-500"
-                  />
-                </div>
-                
-              
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                <Input
+                  type="text"
+                  placeholder="Search for bikes, brands, or locations..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-12 pr-4 h-12 border-2 border-gray-200 rounded-full focus:border-orange-500 transition-all"
+                />
+                <Button className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-gradient-to-r from-orange-500 to-red-500 rounded-full">
+                  Search
+                </Button>
               </div>
             </div>
 
             {/* Header Actions */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
               <NotificationBell />
               
-              <Link href="/customer-dashboard/profile">
-                <Button variant="ghost" size="icon" className="relative hover:bg-orange-50">
-                  <Clock className="h-5 w-5" />
-                </Button>
-              </Link>
+              <Button variant="ghost" size="icon" className="relative hover:bg-orange-50 rounded-full">
+                <Heart className="h-5 w-5 text-gray-700" />
+                {favorites.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {favorites.length}
+                  </span>
+                )}
+              </Button>
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex items-center space-x-2 hover:bg-orange-50">
-                    <div className="h-8 w-8 rounded-full bg-orange-100 flex items-center justify-center">
-                      <User className="h-4 w-4 text-orange-600" />
+                  <Button variant="ghost" className="flex items-center space-x-2 hover:bg-orange-50 rounded-full px-4">
+                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-orange-400 to-red-400 flex items-center justify-center">
+                      <User className="h-5 w-5 text-white" />
                     </div>
-                    <span className="hidden md:block font-medium">Hi, {user?.name?.split(' ')[0]}</span>
+                    <div className="hidden md:block text-left">
+                      <div className="text-xs text-gray-500">Hello,</div>
+                      <div className="font-semibold text-sm">{user?.name?.split(' ')[0]}</div>
+                    </div>
+                    <ChevronDown className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuContent align="end" className="w-64">
                   <DropdownMenuLabel>
-                    <div>
-                      <div className="font-medium">{user?.name}</div>
-                      <div className="text-sm text-muted-foreground">{user?.email}</div>
+                    <div className="flex items-center space-x-3">
+                      <div className="h-12 w-12 rounded-full bg-gradient-to-br from-orange-400 to-red-400 flex items-center justify-center">
+                        <User className="h-6 w-6 text-white" />
+                      </div>
+                      <div>
+                        <div className="font-semibold">{user?.name}</div>
+                        <div className="text-sm text-muted-foreground">{user?.email}</div>
+                      </div>
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link href="/customer-dashboard/profile">
+                    <Link href="/customer-dashboard/profile" className="flex items-center">
                       <User className="mr-2 h-4 w-4" />
                       My Account
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/customer-dashboard/profile">
+                    <Link href="/customer-dashboard/profile" className="flex items-center">
                       <Receipt className="mr-2 h-4 w-4" />
-                      Orders
+                      My Orders
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem>
+                  <DropdownMenuItem className="flex items-center">
                     <Heart className="mr-2 h-4 w-4" />
                     Favorites ({favorites.length})
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/customer-dashboard/profile">
+                    <Link href="/customer-dashboard/profile" className="flex items-center">
                       <Clock className="mr-2 h-4 w-4" />
                       My Rentals
                     </Link>
@@ -283,8 +444,8 @@ export default function CustomerDashboard() {
           </div>
         </div>
         
-        {/* Mobile Search with Actions */}
-        <div className="md:hidden px-4 pb-4 space-y-3">
+        {/* Mobile Search */}
+        <div className="md:hidden px-4 pb-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
@@ -292,237 +453,292 @@ export default function CustomerDashboard() {
               placeholder="Search bikes..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="pl-10 rounded-full"
             />
-          </div>
-          
-          {/* Mobile Quick Actions */}
-          <div className="flex items-center gap-2">
-            {bikes.length > 0 && (
-              <>
-                <Link href={`/customer-dashboard/bike/${bikes[0].id}`} className="flex-1">
-                  <Button variant="outline" size="sm" className="w-full border-orange-200 text-orange-600 hover:bg-orange-50">
-                    <MapPin className="h-4 w-4 mr-1" />
-                    View Details
-                  </Button>
-                </Link>
-                <Button 
-                  size="sm" 
-                  className="flex-1 bg-orange-500 hover:bg-orange-600 text-white"
-                  onClick={() => window.location.href = `/customer-dashboard/bike/${bikes[0].id}`}
-                >
-                  <Clock className="h-4 w-4 mr-1" />
-                  Rent Now
-                </Button>
-              </>
-            )}
           </div>
         </div>
       </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* Promotional Carousel */}
-        <div className="mb-6 relative overflow-hidden rounded-xl">
-          <div 
-            className="flex transition-transform duration-500 ease-in-out"
-            style={{ transform: `translateX(-${currentAdIndex * 100}%)` }}
-          >
-            <div className="min-w-full bg-gradient-to-r from-blue-600 to-purple-700 p-8 text-white flex items-center justify-between">
-              <div>
-                <h2 className="text-3xl font-bold mb-3">Premium E-Bikes Collection</h2>
-                <p className="text-blue-100 text-lg mb-4">Discover our latest electric bikes with advanced features</p>
-                <Button className="bg-white text-blue-600 hover:bg-blue-50 font-semibold">
-                  Shop Now
-                </Button>
-              </div>
-              <div className="hidden md:block">
-                <img src="/uploads/1759650691759-cool-bicycle-outdoors.jpg" alt="E-Bike" className="w-48 h-32 object-cover rounded-lg" />
-              </div>
-            </div>
-            
-            <div className="min-w-full bg-gradient-to-r from-green-600 to-teal-700 p-8 text-white flex items-center justify-between">
-              <div>
-                <h2 className="text-3xl font-bold mb-3">Mountain Adventures Await</h2>
-                <p className="text-green-100 text-lg mb-4">Explore rugged terrains with our mountain bike series</p>
-                <Button className="bg-white text-green-600 hover:bg-green-50 font-semibold">
-                  Explore Collection
-                </Button>
-              </div>
-              <div className="hidden md:block">
-                <img src="/uploads/1759677670759-cool-bicycle-outdoors.jpg" alt="Mountain Bike" className="w-48 h-32 object-cover rounded-lg" />
-              </div>
-            </div>
+        {/* Breadcrumb */}
+        <div className="flex items-center space-x-2 text-sm text-gray-600 mb-6">
+          <Link href="/" className="hover:text-orange-500">Home</Link>
+          <ChevronRight className="h-4 w-4" />
+          <span className="text-gray-900 font-medium">Bike Rentals</span>
+        </div>
 
-            <div className="min-w-full bg-gradient-to-r from-orange-500 to-red-600 p-8 text-white flex items-center justify-between">
-              <div>
-                <h2 className="text-3xl font-bold mb-3">Special Offers This Week</h2>
-                <p className="text-orange-100 text-lg mb-4">Up to 25% off on selected bikes • Limited time</p>
-                <Button className="bg-white text-orange-600 hover:bg-orange-50 font-semibold">
-                  View Deals
-                </Button>
-              </div>
-              <div className="hidden md:block">
-                <img src="/uploads/1759679918404-cool-bicycle-outdoors.jpg" alt="Deal Bikes" className="w-48 h-32 object-cover rounded-lg" />
-              </div>
-            </div>
+        {/* Category Pills */}
+        <div className="mb-8">
+          <div className="flex items-center space-x-2 mb-4">
+            <Tag className="h-5 w-5 text-orange-500" />
+            <h2 className="text-lg font-semibold">Shop by Category</h2>
           </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+            {categories.map((category) => {
+              const IconComponent = category.icon;
+              return (
+                <motion.button
+                  key={category.id}
+                  onClick={() => setTypeFilter(category.id)}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className={`p-4 rounded-xl border-2 transition-all ${
+                    typeFilter === category.id
+                      ? 'border-orange-500 bg-orange-50 shadow-lg'
+                      : 'border-gray-200 bg-white hover:border-orange-300 hover:shadow-md'
+                  }`}
+                >
+                  <div className={`h-12 w-12 ${category.color} rounded-full flex items-center justify-center mx-auto mb-2`}>
+                    <IconComponent className="h-6 w-6 text-white" />
+                  </div>
+                  <div className="text-sm font-semibold text-gray-900">{category.name}</div>
+                  <div className="text-xs text-gray-500">{category.count} bikes</div>
+                </motion.button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Banner Carousel */}
+        <div className="mb-8 relative overflow-hidden rounded-2xl shadow-xl">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentAdIndex}
+              initial={{ opacity: 0, x: 100 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -100 }}
+              transition={{ duration: 0.5 }}
+              className={`relative h-80 bg-gradient-to-r ${bannerAds[currentAdIndex].gradient} overflow-hidden`}
+            >
+              <div className="absolute inset-0 flex items-center justify-between px-12">
+                <div className="text-white max-w-xl">
+                  <motion.h2
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                    className="text-5xl font-bold mb-4"
+                  >
+                    {bannerAds[currentAdIndex].title}
+                  </motion.h2>
+                  <motion.p
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.3 }}
+                    className="text-xl mb-6 opacity-90"
+                  >
+                    {bannerAds[currentAdIndex].subtitle}
+                  </motion.p>
+                  <motion.div
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.4 }}
+                  >
+                    <Button size="lg" className="bg-white text-orange-600 hover:bg-gray-100 shadow-lg">
+                      {bannerAds[currentAdIndex].cta}
+                      <ChevronRight className="ml-2 h-5 w-5" />
+                    </Button>
+                  </motion.div>
+                </div>
+                <div className="hidden lg:block">
+                  <img
+                    src={bannerAds[currentAdIndex].image}
+                    alt={bannerAds[currentAdIndex].title}
+                    className="h-72 w-auto object-contain drop-shadow-2xl"
+                  />
+                </div>
+              </div>
+            </motion.div>
+          </AnimatePresence>
           
-          {/* Carousel Navigation */}
+          {/* Carousel Indicators */}
           <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
-            {[0, 1, 2].map((index) => (
+            {bannerAds.map((_, index) => (
               <button
                 key={index}
                 onClick={() => setCurrentAdIndex(index)}
-                className={`w-3 h-3 rounded-full transition-colors ${
-                  currentAdIndex === index ? 'bg-white' : 'bg-white/50'
+                aria-label={`Go to slide ${index + 1}`}
+                title={`Go to slide ${index + 1}`}
+                className={`h-2 rounded-full transition-all ${
+                  index === currentAdIndex ? 'w-8 bg-white' : 'w-2 bg-white/50'
                 }`}
-                aria-label={`Go to ad ${index + 1}`}
               />
             ))}
-          </div>
-          
-          {/* Auto-play timer */}
-          <div className="absolute top-4 right-4 text-white text-sm bg-black/20 px-3 py-1 rounded-full">
-            Ad {currentAdIndex + 1} of 3
           </div>
         </div>
 
         <div className="flex gap-6">
-          {/* Mobile Sidebar Overlay */}
-          {isSidebarOpen && (
-            <div className="lg:hidden fixed inset-0 z-50 bg-black bg-opacity-50" onClick={() => setIsSidebarOpen(false)} />
-          )}
-
-          {/* Sidebar */}
-          <div className={`
-            lg:block lg:w-64 flex-shrink-0
-            ${isSidebarOpen ? 'fixed inset-y-0 left-0 z-50 w-80 bg-white' : 'hidden'}
-          `}>
-            <div className="bg-white rounded-lg shadow-sm border h-fit sticky top-24">
-              {/* Mobile Sidebar Header */}
+          {/* Sidebar Filters - Desktop */}
+          <div className={`${isSidebarOpen ? 'fixed' : 'hidden'} lg:block lg:sticky top-24 h-fit w-64 bg-white rounded-xl shadow-lg border p-6 z-40`}>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-bold flex items-center">
+                <Filter className="mr-2 h-5 w-5 text-orange-500" />
+                Filters
+              </h3>
               {isSidebarOpen && (
-                <div className="lg:hidden flex items-center justify-between p-4 border-b">
-                  <h3 className="font-semibold">Filters</h3>
-                  <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(false)}>
-                    <X className="h-5 w-5" />
-                  </Button>
-                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="lg:hidden"
+                  onClick={() => setIsSidebarOpen(false)}
+                >
+                  <X className="h-5 w-5" />
+                </Button>
               )}
+            </div>
 
-              <div className="p-6 space-y-6">
-                {/* Categories */}
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
-                    <Filter className="mr-2 h-4 w-4" />
-                    Categories
-                  </h3>
-                  <div className="space-y-2">
-                    {categories.map((category) => (
-                      <button
-                        key={category.id}
-                        onClick={() => setTypeFilter(category.id)}
-                        className={`w-full flex items-center justify-between p-3 rounded-lg border transition-colors ${
-                          typeFilter === category.id
-                            ? 'border-orange-500 bg-orange-50 text-orange-700'
-                            : 'border-gray-200 hover:border-gray-300'
-                        }`}
-                      >
-                        <div className="flex items-center">
-                          <span className="text-lg mr-2">{category.icon}</span>
-                          <span className="font-medium">{category.name}</span>
-                        </div>
-                        <span className="text-sm text-gray-500">({category.count})</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Price Range */}
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-4">Price Range</h3>
-                  <div className="space-y-4">
-                    <Slider
-                      value={priceRange}
-                      onValueChange={setPriceRange}
-                      max={100}
-                      min={0}
-                      step={5}
-                      className="w-full"
-                    />
-                    <div className="flex justify-between text-sm text-gray-600">
-                      <span>${priceRange[0]}</span>
-                      <span>${priceRange[1]}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Brands */}
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-4">Brands</h3>
-                  <div className="space-y-2">
-                    {brands.map((brand) => (
-                      <div key={brand} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={brand}
-                          checked={brandFilter.includes(brand)}
-                          onCheckedChange={(checked) => handleBrandFilter(brand, checked as boolean)}
-                        />
-                        <label htmlFor={brand} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                          {brand}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Quick Filters */}
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-4">Quick Filters</h3>
-                  <div className="space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox id="available" />
-                      <label htmlFor="available" className="text-sm">Available Now</label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox id="electric" />
-                      <label htmlFor="electric" className="text-sm">Electric Only</label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox id="nearby" />
-                      <label htmlFor="nearby" className="text-sm">Nearby (&lt; 1km)</label>
-                    </div>
-                  </div>
+            {/* Price Range */}
+            <div className="mb-6 pb-6 border-b">
+              <h4 className="font-semibold mb-4 flex items-center">
+                <Tag className="mr-2 h-4 w-4 text-orange-500" />
+                Price Range
+              </h4>
+              <div className="space-y-4">
+                <Slider
+                  value={priceRange}
+                  onValueChange={setPriceRange}
+                  max={500}
+                  step={10}
+                  className="mb-2"
+                />
+                <div className="flex justify-between text-sm font-medium">
+                  <span className="px-3 py-1 bg-orange-50 text-orange-600 rounded-lg">${priceRange[0]}</span>
+                  <span className="text-gray-400">to</span>
+                  <span className="px-3 py-1 bg-orange-50 text-orange-600 rounded-lg">${priceRange[1]}</span>
                 </div>
               </div>
             </div>
+
+            {/* Brand Filter */}
+            <div className="mb-6 pb-6 border-b">
+              <h4 className="font-semibold mb-4 flex items-center">
+                <Award className="mr-2 h-4 w-4 text-orange-500" />
+                Brand
+              </h4>
+              <div className="space-y-3 max-h-60 overflow-y-auto">
+                {brands.slice(0, 8).map((brand) => (
+                  <label key={brand} className="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors">
+                    <Checkbox
+                      checked={brandFilter.includes(brand)}
+                      onCheckedChange={(checked) => handleBrandFilter(brand, checked as boolean)}
+                      className="border-orange-300"
+                    />
+                    <span className="text-sm text-gray-700">{brand}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Availability */}
+            <div className="mb-6">
+              <h4 className="font-semibold mb-4 flex items-center">
+                <Package className="mr-2 h-4 w-4 text-orange-500" />
+                Availability
+              </h4>
+              <label className="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors">
+                <Checkbox className="border-orange-300" />
+                <span className="text-sm text-gray-700">In Stock Only</span>
+              </label>
+            </div>
+
+            {/* Clear Filters */}
+            <Button
+              variant="outline"
+              className="w-full border-orange-500 text-orange-600 hover:bg-orange-50"
+              onClick={() => {
+                setSearchTerm("");
+                setTypeFilter("all");
+                setBrandFilter([]);
+                setPriceRange([0, 500]);
+              }}
+            >
+              Clear All Filters
+            </Button>
           </div>
 
           {/* Main Content */}
           <div className="flex-1">
-            {/* Sort and Filter Bar */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+            {/* Sort and View Options */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 bg-white rounded-xl shadow-sm border p-4">
               <div>
-                <h2 className="text-xl font-semibold text-gray-900">All Bikes</h2>
-                <p className="text-gray-600">{filteredBikes.length} bikes available</p>
+                <h2 className="text-2xl font-bold text-gray-900 flex items-center">
+                  <Package className="mr-2 h-6 w-6 text-orange-500" />
+                  All Bikes
+                </h2>
+                <p className="text-sm text-gray-600 mt-1">
+                  <span className="font-semibold text-orange-600">{filteredBikes.length}</span> products found
+                  {bikes.length !== filteredBikes.length && (
+                    <span className="text-gray-500"> (filtered from {bikes.length} total)</span>
+                  )}
+                </p>
+                {loading && <p className="text-xs text-blue-600 mt-1">Loading bikes...</p>}
               </div>
               
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
+                <Select value={locationFilter} onValueChange={setLocationFilter}>
+                  <SelectTrigger className="w-52 border-orange-200 focus:border-orange-500">
+                    <MapPin className="mr-2 h-4 w-4" />
+                    <SelectValue placeholder="All Locations" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Locations</SelectItem>
+                    {locations.map((location) => (
+                      <SelectItem key={location} value={location}>
+                        <div className="flex items-center">
+                          <MapPin className="mr-2 h-4 w-4" />
+                          {location}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
                 <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="w-48">
+                  <SelectTrigger className="w-52 border-orange-200 focus:border-orange-500">
                     <SelectValue placeholder="Sort by" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="popular">Most Popular</SelectItem>
-                    <SelectItem value="price-low">Price: Low to High</SelectItem>
-                    <SelectItem value="price-high">Price: High to Low</SelectItem>
-                    <SelectItem value="rating">Highest Rated</SelectItem>
-                    <SelectItem value="newest">Newest First</SelectItem>
+                    <SelectItem value="popular">
+                      <div className="flex items-center">
+                        <TrendingUp className="mr-2 h-4 w-4" />
+                        Most Popular
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="location">
+                      <div className="flex items-center">
+                        <MapPin className="mr-2 h-4 w-4" />
+                        Sort by Location
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="price-low">
+                      <div className="flex items-center">
+                        <Tag className="mr-2 h-4 w-4" />
+                        Price: Low to High
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="price-high">
+                      <div className="flex items-center">
+                        <Tag className="mr-2 h-4 w-4" />
+                        Price: High to Low
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="rating">
+                      <div className="flex items-center">
+                        <Star className="mr-2 h-4 w-4" />
+                        Highest Rated
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="newest">
+                      <div className="flex items-center">
+                        <Clock className="mr-2 h-4 w-4" />
+                        Newest First
+                      </div>
+                    </SelectItem>
                   </SelectContent>
                 </Select>
                 
                 <Button
                   variant="outline"
-                  className="lg:hidden"
+                  className="lg:hidden border-orange-500 text-orange-600"
                   onClick={() => setIsSidebarOpen(true)}
                 >
                   <Filter className="mr-2 h-4 w-4" />
@@ -537,119 +753,165 @@ export default function CustomerDashboard() {
                 // Loading skeletons
                 Array.from({ length: 8 }).map((_, i) => (
                   <Card key={i} className="overflow-hidden">
-                    <div className="w-full h-56 bg-gray-200 animate-pulse" />
+                    <div className="w-full h-64 bg-gray-200 animate-pulse" />
                     <CardContent className="p-4">
-                      <div className="space-y-2">
+                      <div className="space-y-3">
                         <div className="h-4 bg-gray-200 rounded animate-pulse" />
                         <div className="h-3 bg-gray-200 rounded animate-pulse w-2/3" />
                         <div className="h-6 bg-gray-200 rounded animate-pulse w-1/2" />
-                        <div className="h-8 bg-gray-200 rounded animate-pulse" />
+                        <div className="h-10 bg-gray-200 rounded animate-pulse" />
                       </div>
                     </CardContent>
                   </Card>
                 ))
-              ) : (
-                filteredBikes.map((bike) => (
-                <Card key={bike.id} className="overflow-hidden hover:shadow-lg transition-shadow group cursor-pointer">
-                  <Link href={`/customer-dashboard/bike/${bike.id}`}>
-                    <div className="relative">
-                      <img
-                        src={bike.image}
-                        alt={bike.name}
-                        className="w-full h-56 object-cover group-hover:scale-105 transition-transform duration-300"
-                        onError={(e) => {
-                          e.currentTarget.src = '/bike.jpg';
-                        }}
-                      />
-                      <div className="absolute top-3 left-3">
-                        {bike.discount && (
-                          <Badge className="bg-orange-500 text-white font-semibold">-{bike.discount}%</Badge>
-                        )}
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="absolute top-3 right-3 bg-white/80 hover:bg-white opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          toggleFavorite(bike.id);
-                        }}
-                      >
-                        <Heart className={`h-4 w-4 ${favorites.includes(bike.id) ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} />
-                      </Button>
-                      {!bike.available && (
-                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                          <span className="text-white font-semibold">Out of Stock</span>
+              ) : paginatedBikes.length > 0 ? (
+                paginatedBikes.map((bike) => (
+                <motion.div
+                  key={bike.serialNumber}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Card className="overflow-hidden hover:shadow-2xl transition-all duration-300 group border-2 border-transparent hover:border-orange-200">
+                    <Link href={`/customer-dashboard/bike/${bike.serialNumber}`}>
+                      <div className="relative overflow-hidden">
+                        <img
+                          src={bike.image}
+                          alt={bike.name}
+                          className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500"
+                          onError={(e) => {
+                            e.currentTarget.src = '/bike.jpg';
+                          }}
+                        />
+                        <div className="absolute top-3 left-3 flex flex-col gap-2">
+                          {bike.discount && (
+                            <Badge className="bg-red-500 text-white font-bold shadow-lg">
+                              -{bike.discount}% OFF
+                            </Badge>
+                          )}
+                          {bike.isFlashSale && (
+                            <Badge className="bg-yellow-500 text-white font-bold shadow-lg animate-pulse">
+                              ⚡ Flash Sale
+                            </Badge>
+                          )}
+                          {bike.badge && (
+                            <Badge className="bg-blue-500 text-white font-semibold shadow-lg">
+                              {bike.badge}
+                            </Badge>
+                          )}
+                          <Badge variant="secondary" className="bg-white/90 text-gray-700 text-xs">
+                            #{bike.serialNumber}
+                          </Badge>
                         </div>
-                      )}
-                    </div>
-                  </Link>
-                  <CardContent className="p-4">
-                    <Link href={`/customer-dashboard/bike/${bike.id}`}>
-                      <div className="mb-2">
-                        <h3 className="font-semibold text-gray-900 mb-1 hover:text-orange-600 transition-colors line-clamp-1">
-                          {bike.name}
-                        </h3>
-                        <p className="text-sm text-gray-600">{bike.brand}</p>
-                      </div>
-                      
-                      <div className="flex items-center gap-1 mb-3">
-                        <div className="flex">
-                          {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`h-3 w-3 ${
-                                i < Math.floor(bike.rating)
-                                  ? 'fill-yellow-400 text-yellow-400'
-                                  : 'text-gray-300'
-                              }`}
-                            />
-                          ))}
-                        </div>
-                        <span className="text-xs text-gray-600">({bike.reviews})</span>
-                      </div>
-
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="font-bold text-lg text-orange-600">${bike.price.toLocaleString()}</span>
-                        {bike.originalPrice && (
-                          <span className="text-sm text-gray-500 line-through">${bike.originalPrice.toLocaleString()}</span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="absolute top-3 right-3 bg-white/90 hover:bg-white backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            toggleFavorite(bike.id);
+                          }}
+                        >
+                          <Heart className={`h-5 w-5 ${favorites.includes(bike.id) ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} />
+                        </Button>
+                        {!bike.available && (
+                          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center">
+                            <div className="text-center">
+                              <span className="text-white font-bold text-lg">Out of Stock</span>
+                              <p className="text-white/80 text-sm mt-1">Check back soon</p>
+                            </div>
+                          </div>
                         )}
-                        <span className="text-xs text-gray-500">/day</span>
-                      </div>
-
-                      <div className="flex items-center text-xs text-gray-500 mb-2">
-                        <MapPin className="h-3 w-3 mr-1" />
-                        {bike.location} • {bike.distance}km away
-                      </div>
-
-                      <div className="text-xs text-gray-600 mb-3">
-                        ${bike.hourlyRate.toLocaleString()}/hour {bike.battery && `• ${bike.battery}% battery`}
                       </div>
                     </Link>
+                    <CardContent className="p-4">
+                      <Link href={`/customer-dashboard/bike/${bike.serialNumber}`}>
+                        <div className="mb-3">
+                          <h3 className="font-bold text-gray-900 mb-1 hover:text-orange-600 transition-colors line-clamp-2 text-lg">
+                            {bike.name}
+                          </h3>
+                          <p className="text-sm text-gray-500 font-medium">{bike.brand}</p>
+                        </div>
+                        
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="flex">
+                            {[...Array(5)].map((_, i) => (
+                              <Star
+                                key={i}
+                                className={`h-4 w-4 ${
+                                  i < Math.floor(bike.rating)
+                                    ? 'fill-yellow-400 text-yellow-400'
+                                    : 'text-gray-300'
+                                }`}
+                              />
+                            ))}
+                          </div>
+                          <span className="text-sm text-gray-600 font-medium">
+                            {bike.rating.toFixed(1)} ({bike.reviews})
+                          </span>
+                        </div>
 
-                    <Button 
-                      className="w-full bg-orange-500 hover:bg-orange-600" 
-                      disabled={!bike.available}
-                      onClick={() => {
-                        // Direct rental - redirect to bike details for rental
-                        window.location.href = `/customer-dashboard/bike/${bike.id}`;
-                      }}
-                    >
-                      {bike.available ? 'Rent Now' : 'Out of Stock'}
-                    </Button>
-                  </CardContent>
-                </Card>
+                        <div className="flex items-baseline gap-2 mb-3">
+                          <span className="font-bold text-2xl text-orange-600">${bike.price}</span>
+                          {bike.originalPrice && (
+                            <span className="text-sm text-gray-400 line-through">${bike.originalPrice}</span>
+                          )}
+                          <span className="text-xs text-gray-500 font-medium">/day</span>
+                        </div>
+
+                        <div className="flex items-center justify-between text-xs text-gray-500 mb-3 pb-3 border-b">
+                          <span className="flex items-center">
+                            <MapPin className="h-3 w-3 mr-1 text-orange-500" />
+                            {bike.location}
+                          </span>
+                          {bike.battery && (
+                            <span className="flex items-center text-green-600 font-medium">
+                              <Battery className="h-3 w-3 mr-1" />
+                              {bike.battery}%
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-2 text-xs mb-3">
+                          <Badge variant="secondary" className="bg-orange-50 text-orange-600">
+                            ${bike.hourlyRate}/hr
+                          </Badge>
+                          {bike.range && (
+                            <Badge variant="secondary" className="bg-blue-50 text-blue-600">
+                              {bike.range}km range
+                            </Badge>
+                          )}
+                        </div>
+                      </Link>
+
+                      <Button 
+                        className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all" 
+                        disabled={!bike.available}
+                        onClick={() => {
+                          window.location.href = `/customer-dashboard/bike/${bike.serialNumber}`;
+                        }}
+                      >
+                        {bike.available ? (
+                          <>
+                            <ShoppingCart className="mr-2 h-4 w-4" />
+                            Rent Now
+                          </>
+                        ) : 'Out of Stock'}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </motion.div>
               ))
-              )}
+            ) : null}
               
               {/* Empty State */}
               {!loading && filteredBikes.length === 0 && (
-                <div className="col-span-full flex flex-col items-center justify-center py-16 text-center">
-                  <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                    <Search className="h-12 w-12 text-gray-400" />
+                <div className="col-span-full flex flex-col items-center justify-center py-20 text-center">
+                  <div className="w-32 h-32 bg-gradient-to-br from-orange-100 to-red-100 rounded-full flex items-center justify-center mb-6">
+                    <Search className="h-16 w-16 text-orange-400" />
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">No bikes found</h3>
-                  <p className="text-gray-500 mb-6 max-w-md">
+                  <h3 className="text-2xl font-bold text-gray-900 mb-3">No bikes found</h3>
+                  <p className="text-gray-600 mb-8 max-w-md text-lg">
                     {searchTerm || typeFilter !== "all" || brandFilter.length > 0 
                       ? "Try adjusting your filters or search terms to find more bikes."
                       : "There are no bikes available at the moment. Please check back later."
@@ -657,7 +919,8 @@ export default function CustomerDashboard() {
                   </p>
                   {(searchTerm || typeFilter !== "all" || brandFilter.length > 0) && (
                     <Button 
-                      variant="outline" 
+                      size="lg"
+                      className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
                       onClick={() => {
                         setSearchTerm("");
                         setTypeFilter("all");
@@ -672,87 +935,141 @@ export default function CustomerDashboard() {
               )}
             </div>
 
-            {!loading && filteredBikes.length === 0 && (
-              <div className="text-center py-12 col-span-full">
-                <div className="text-gray-400 mb-4">
-                  <Search className="h-12 w-12 mx-auto" />
-                </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  {bikes.length === 0 ? "No bikes available" : "No bikes found"}
-                </h3>
-                <p className="text-gray-600">
-                  {bikes.length === 0 
-                    ? "Please check back later or contact support" 
-                    : "Try adjusting your filters or search terms"
-                  }
-                </p>
+            {/* Pagination */}
+            {!loading && filteredBikes.length > 0 && totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 mt-12 mb-8">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="border-orange-200 hover:bg-orange-50"
+                >
+                  <ChevronRight className="h-4 w-4 rotate-180" />
+                </Button>
+
+                {/* First page */}
+                {currentPage > 3 && (
+                  <>
+                    <Button
+                      variant={currentPage === 1 ? "default" : "outline"}
+                      className={currentPage === 1 ? "bg-gradient-to-r from-orange-500 to-red-500" : "border-orange-200 hover:bg-orange-50"}
+                      onClick={() => handlePageChange(1)}
+                    >
+                      1
+                    </Button>
+                    {currentPage > 4 && <span className="px-2 text-gray-500">...</span>}
+                  </>
+                )}
+
+                {/* Page numbers */}
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter(page => {
+                    return page === currentPage || 
+                           page === currentPage - 1 || 
+                           page === currentPage + 1 ||
+                           (currentPage <= 2 && page <= 3) ||
+                           (currentPage >= totalPages - 1 && page >= totalPages - 2);
+                  })
+                  .map(page => (
+                    <Button
+                      key={page}
+                      variant={currentPage === page ? "default" : "outline"}
+                      className={currentPage === page 
+                        ? "bg-gradient-to-r from-orange-500 to-red-500 min-w-[40px]" 
+                        : "border-orange-200 hover:bg-orange-50 min-w-[40px]"}
+                      onClick={() => handlePageChange(page)}
+                    >
+                      {page}
+                    </Button>
+                  ))}
+
+                {/* Last page */}
+                {currentPage < totalPages - 2 && (
+                  <>
+                    {currentPage < totalPages - 3 && <span className="px-2 text-gray-500">...</span>}
+                    <Button
+                      variant={currentPage === totalPages ? "default" : "outline"}
+                      className={currentPage === totalPages ? "bg-gradient-to-r from-orange-500 to-red-500" : "border-orange-200 hover:bg-orange-50"}
+                      onClick={() => handlePageChange(totalPages)}
+                    >
+                      {totalPages}
+                    </Button>
+                  </>
+                )}
+
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="border-orange-200 hover:bg-orange-50"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+
+                <span className="ml-4 text-sm text-gray-600">
+                  Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, filteredBikes.length)} of {filteredBikes.length} bikes
+                </span>
               </div>
             )}
           </div>
         </div>
 
-        {/* Top Selling Section */}
-        <div className="mt-12">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 flex items-center">
-              <Award className="mr-2 h-6 w-6 text-yellow-500" />
-              Top Selling
-            </h2>
-            <Button variant="ghost" className="text-orange-600 hover:text-orange-700">
-              See All <ChevronRight className="ml-1 h-4 w-4" />
-            </Button>
+        {/* Top Categories Section - Alibaba Style */}
+        {topCategories.length > 0 && (
+          <div className="mt-16">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900 flex items-center mb-2">
+                  <Grid className="mr-3 h-8 w-8 text-orange-500" />
+                  Top Categories
+                </h2>
+                <p className="text-gray-600">Browse bikes by popular categories</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+              {topCategories.map((category, index) => {
+                const IconComponent = category.icon;
+                return (
+                  <motion.div
+                    key={category.name}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    whileHover={{ y: -5 }}
+                    className="cursor-pointer"
+                    onClick={() => setTypeFilter(category.name.split(' ')[0].toLowerCase())}
+                  >
+                    <Card className="overflow-hidden hover:shadow-xl transition-all group border-2 border-transparent hover:border-orange-200">
+                      <div className="relative h-40 overflow-hidden">
+                        <img
+                          src={category.image}
+                          alt={category.name}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                          onError={(e) => {
+                            e.currentTarget.src = '/bike.jpg';
+                          }}
+                        />
+                        <div className={`absolute inset-0 bg-gradient-to-t ${category.color} opacity-60 group-hover:opacity-70 transition-opacity`} />
+                        <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
+                          <IconComponent className="h-10 w-10 mb-2" />
+                          <h3 className="font-bold text-lg text-center px-2">{category.name}</h3>
+                          <Badge className="mt-2 bg-white text-gray-900 font-semibold">
+                            {category.count} bikes
+                          </Badge>
+                        </div>
+                      </div>
+                    </Card>
+                  </motion.div>
+                );
+              })}
+            </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {topSellingBikes.map((bike, index) => (
-              <Card key={bike.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                <Link href={`/customer-dashboard/bike/${bike.id}`}>
-                  <div className="relative">
-                    <img
-                      src={bike.image}
-                      alt={bike.name}
-                      className="w-full h-48 object-cover"
-                    />
-                    <div className="absolute top-2 left-2">
-                      <Badge className="bg-yellow-500 text-white">#{index + 1}</Badge>
-                    </div>
-                  </div>
-                  <CardContent className="p-4">
-                    <h3 className="font-semibold text-sm mb-1 line-clamp-1">{bike.name}</h3>
-                    <div className="flex items-center gap-1 mb-2">
-                      <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                      <span className="text-xs text-gray-600">{bike.rating} ({bike.reviews} sold)</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-orange-600">${bike.price}</span>
-                      {bike.originalPrice && (
-                        <span className="text-xs text-gray-500 line-through">${bike.originalPrice}</span>
-                      )}
-                    </div>
-                  </CardContent>
-                </Link>
-              </Card>
-            ))}
-          </div>
-        </div>
+        )}
 
-        {/* Features Banner */}
-        <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
-            <Truck className="h-8 w-8 text-blue-600 mx-auto mb-3" />
-            <h3 className="font-semibold text-blue-900 mb-2">Free Delivery</h3>
-            <p className="text-sm text-blue-700">On orders above $100</p>
-          </div>
-          <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
-            <Shield className="h-8 w-8 text-green-600 mx-auto mb-3" />
-            <h3 className="font-semibold text-green-900 mb-2">Secure Payments</h3>
-            <p className="text-sm text-green-700">100% protected payments</p>
-          </div>
-          <div className="bg-purple-50 border border-purple-200 rounded-lg p-6 text-center">
-            <Award className="h-8 w-8 text-purple-600 mx-auto mb-3" />
-            <h3 className="font-semibold text-purple-900 mb-2">Quality Guarantee</h3>
-            <p className="text-sm text-purple-700">Premium bike collection</p>
-          </div>
-        </div>
+        {/* Footer */}
+        <Footer />
       </div>
     </div>
   );

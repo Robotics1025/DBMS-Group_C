@@ -112,7 +112,7 @@ export const bikeQueries = {
   // Get all available bikes with location info
   getAvailableBikes: `
     SELECT 
-      b.BikeID, b.BikeSerialNumber, b.Model, b.BikeType, 
+      b.BikeID, b.BikeSerialNumber, b.Model, b.BikeType, b.bike_image,
       b.RentalRatePerMinute, b.CurrentStatus, b.LastMaintenanceDate, b.LocationID,
       l.LocationName, l.Address, l.City, l.PhoneNumber, l.Capacity
     FROM bike b
@@ -124,7 +124,7 @@ export const bikeQueries = {
   // Get bike by ID with location
   getBikeById: `
     SELECT 
-      b.BikeID, b.BikeSerialNumber, b.Model, b.BikeType, 
+      b.BikeID, b.BikeSerialNumber, b.Model, b.BikeType, b.bike_image,
       b.RentalRatePerMinute, b.CurrentStatus, b.LastMaintenanceDate, b.LocationID,
       l.LocationName, l.Address, l.City, l.PhoneNumber, l.Capacity
     FROM bike b
@@ -135,7 +135,7 @@ export const bikeQueries = {
   // Get all bikes
   getAllBikes: `
     SELECT 
-      b.BikeID, b.BikeSerialNumber, b.Model, b.BikeType, 
+      b.BikeID, b.BikeSerialNumber, b.Model, b.BikeType, b.bike_image,
       b.RentalRatePerMinute, b.CurrentStatus, b.LastMaintenanceDate, b.LocationID,
       l.LocationName, l.Address, l.City
     FROM bike b
@@ -222,7 +222,7 @@ export const rentalQueries = {
     SELECT 
       r.RentalID, r.CustomerID, r.BikeID, r.RentalStart, r.ExpectedReturn, 
       r.RentalEnd, r.TotalCost, r.PaymentStatus, r.PromoID,
-      b.BikeSerialNumber, b.Model, b.BikeType, b.CurrentStatus, 
+      b.BikeSerialNumber, b.Model, b.BikeType, b.bike_image, b.CurrentStatus, 
       b.RentalRatePerMinute, b.LastMaintenanceDate, b.LocationID
     FROM rental r
     JOIN bike b ON r.BikeID = b.BikeID
@@ -242,7 +242,7 @@ export const rentalQueries = {
     SELECT 
       r.RentalID, r.CustomerID, r.BikeID, r.RentalStart, r.ExpectedReturn, 
       r.RentalEnd, r.TotalCost, r.PaymentStatus, r.PromoID,
-      b.BikeSerialNumber, b.Model, b.BikeType
+      b.BikeSerialNumber, b.Model, b.BikeType, b.bike_image
     FROM rental r
     JOIN bike b ON r.BikeID = b.BikeID
     WHERE r.CustomerID = ?
@@ -255,7 +255,7 @@ export const rentalQueries = {
       r.RentalID, r.CustomerID, r.BikeID, r.RentalStart, r.ExpectedReturn, 
       r.TotalCost, r.PaymentStatus, r.PromoID,
       u.FirstName, u.LastName, u.Email, u.PhoneNumber, u.NationalID,
-      b.BikeSerialNumber, b.Model, b.BikeType, b.LocationID
+      b.BikeSerialNumber, b.Model, b.BikeType, b.bike_image, b.LocationID
     FROM rental r
     JOIN user u ON r.CustomerID = u.UserID
     JOIN bike b ON r.BikeID = b.BikeID
@@ -278,7 +278,7 @@ export const rentalQueries = {
       r.RentalID, r.CustomerID, r.BikeID, r.RentalStart, r.ExpectedReturn, 
       r.TotalCost, r.PaymentStatus,
       u.FirstName, u.LastName, u.Email, u.PhoneNumber,
-      b.BikeSerialNumber, b.Model, b.BikeType
+      b.BikeSerialNumber, b.Model, b.BikeType, b.bike_image
     FROM rental r
     JOIN user u ON r.CustomerID = u.UserID
     JOIN bike b ON r.BikeID = b.BikeID
@@ -473,7 +473,7 @@ export const notificationQueries = {
     SELECT 
       r.RentalID, r.CustomerID, r.BikeID, r.RentalStart, r.ExpectedReturn,
       u.FirstName, u.LastName, u.Email, u.PhoneNumber, u.NationalID,
-      b.BikeSerialNumber, b.Model, b.BikeType, b.LocationID
+      b.BikeSerialNumber, b.Model, b.BikeType, b.bike_image, b.LocationID
     FROM rental r
     JOIN user u ON r.CustomerID = u.UserID  
     JOIN bike b ON r.BikeID = b.BikeID
